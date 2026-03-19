@@ -1,0 +1,113 @@
+{
+  "entities": {
+    "QRCode": {
+      "title": "QRCode",
+      "description": "Represents a physical or digital QR code sticker.",
+      "type": "object",
+      "properties": {
+        "qrId": {
+          "type": "string",
+          "description": "Unique identifier for the QR code (e.g., QR-84729A)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["UNLINKED", "LINKED"],
+          "description": "The current state of the QR code."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The ID of the owner this QR is linked to (null if UNLINKED)."
+        },
+        "createdBy": {
+          "type": "string",
+          "enum": ["ADMIN", "OWNER"],
+          "description": "Who generated the QR code."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the QR code was created."
+        }
+      },
+      "required": ["qrId", "status", "createdBy"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "A real estate property listing.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "location": { "type": "string" },
+        "beds": { "type": "number" },
+        "baths": { "type": "number" },
+        "sqft": { "type": "number" },
+        "type": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "isActive": { "type": "boolean" },
+        "bhkType": { "type": "string" },
+        "furnishing": { "type": "string" },
+        "locality": { "type": "string" },
+        "fullAddress": { "type": "string" },
+        "state": { "type": "string" },
+        "city": { "type": "string" },
+        "pincode": { "type": "string" },
+        "deposit": { "type": "number" },
+        "maintenance": { "type": "number" },
+        "priceNegotiable": { "type": "boolean" },
+        "loanAvailable": { "type": "boolean" },
+        "floorNumber": { "type": "number" },
+        "totalFloors": { "type": "number" },
+        "preferredTenant": { "type": "string" },
+        "availableFrom": { "type": "string" },
+        "amenities": { "type": "array", "items": { "type": "string" } },
+        "nearbyFacilities": { "type": "array", "items": { "type": "string" } },
+        "userType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "isActive", "category", "bhkType", "type", "furnishing", "locality", "city", "state", "pincode"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Application user (Admin, Owner, or Finder).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["ADMIN", "OWNER", "FINDER"]
+        }
+      },
+      "required": ["id", "role"]
+    }
+  },
+  "firestore": {
+    "/qrcodes/{qrId}": {
+      "schema": "QRCode",
+      "description": "Collection of all QR codes."
+    },
+    "/properties/{propertyId}": {
+      "schema": "Property",
+      "description": "Collection of all property listings."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles."
+    }
+  }
+}

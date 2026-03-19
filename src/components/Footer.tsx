@@ -1,0 +1,70 @@
+import React from 'react';
+import { Home, Instagram, Twitter, Facebook, Linkedin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+export const Footer: React.FC = () => {
+  return (
+    <footer className="border-t border-[var(--border)] bg-[var(--bg)] pt-20 pb-10 transition-colors duration-300">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
+          <div className="col-span-1 md:col-span-1">
+            <div className="mb-6 flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-black">
+                <Home size={24} />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">LuxeEstate</span>
+            </div>
+            <p className="mb-6 text-sm text-[var(--text-secondary)] leading-relaxed">
+              Redefining luxury real estate with an exclusive collection of the world's most prestigious properties.
+            </p>
+            <div className="flex gap-4">
+              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Instagram size={20} /></a>
+              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Twitter size={20} /></a>
+              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Facebook size={20} /></a>
+              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Linkedin size={20} /></a>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Company</h4>
+            <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
+              <li><a href="#" className="transition-colors hover:text-brand">About Us</a></li>
+              <li><a href="#" className="transition-colors hover:text-brand">Our Team</a></li>
+              <li><a href="#" className="transition-colors hover:text-brand">Careers</a></li>
+              <li><a href="#" className="transition-colors hover:text-brand">Contact</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Support</h4>
+            <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
+              <li><a href="#" className="transition-colors hover:text-brand">Help Center</a></li>
+              <li><a href="#" className="transition-colors hover:text-brand">Terms of Service</a></li>
+              <li><a href="#" className="transition-colors hover:text-brand">Privacy Policy</a></li>
+              <li><a href="#" className="transition-colors hover:text-brand">FAQ</a></li>
+              <li><Link to="/admin/qr" className="transition-colors hover:text-brand">Admin Panel</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Testimonials</h4>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-4">
+                <p className="text-xs italic text-[var(--text-secondary)]">"Found my dream villa in Malibu within a week. Exceptional service!"</p>
+                <p className="mt-2 text-[10px] font-bold text-brand">- Sarah J.</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-4">
+                <p className="text-xs italic text-[var(--text-secondary)]">"The Smart Tolet Board made listing my apartment so much easier."</p>
+                <p className="mt-2 text-[10px] font-bold text-brand">- Michael R.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-20 border-t border-[var(--border)] pt-10 text-center text-xs text-[var(--text-secondary)]/50">
+          <p>© 2026 LuxeEstate. All rights reserved. Designed for the elite.</p>
+        </div>
+      </div>
+    </footer>
+  );
+};

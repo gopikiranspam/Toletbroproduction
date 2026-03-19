@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #10b981; /* Emerald-500 */
+}
+
+:root {
+  --bg: #ffffff;
+  --card-bg: #f8f9fa;
+  --border: rgba(0, 0, 0, 0.08);
+  --text-primary: #050505;
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --navbar-bg: rgba(255, 255, 255, 0.7);
+}
+
+.dark {
+  --bg: #050505;
+  --card-bg: #111111;
+  --border: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --navbar-bg: rgba(0, 0, 0, 0.5);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #333;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
