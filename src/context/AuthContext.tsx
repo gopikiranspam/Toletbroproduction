@@ -7,11 +7,15 @@ import {
   signOut,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { User, UserRole } from '../types';
+import { safeLog } from '../utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -19,8 +23,9 @@ interface AuthContextType {
   loading: boolean;
   isAuthReady: boolean;
   loginWithGoogle: () => Promise<void>;
-  loginWithEmail: (email: string, pass: string) => Promise<void>;
-  signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+  setupRecaptcha: (container: HTMLElement | string) => void;
+  clearRecaptcha: () => void;
+  sendOtp: (phoneNumber: string) => Promise<ConfirmationResult>;
   logout: () => Promise<void>;
   updateUserRole: (role: UserRole) => Promise<void>;
   checkUserExists: (email: string) => Promise<boolean>;
@@ -33,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fUser) => {
@@ -56,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(newUser);
           }
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          safeLog.error('Error fetching user profile:', error);
         }
       } else {
         setUser(null);
@@ -75,28 +81,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
-      console.error('Login failed:', error);
+      safeLog.error('Login failed:', error);
       throw error;
     }
   };
 
-  const loginWithEmail = async (email: string, pass: string) => {
+  const setupRecaptcha = (container: HTMLElement | string) => {
+    if (!container) {
+      safeLog.error('Recaptcha container is missing');
+      return;
+    }
+
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
+      // Clean up existing verifier if it exists
+      if (recaptchaVerifier) {
+        try {
+          recaptchaVerifier.clear();
+        } catch (e) {
+          safeLog.warn('Error clearing previous recaptcha:', e);
+        }
+      }
+
+      // Initialize new verifier
+      // Using 'invisible' size by default. 
+      const verifier = new RecaptchaVerifier(auth, container, {
+        size: 'invisible',
+        callback: (response: any) => {
+          safeLog.log('Recaptcha resolved successfully');
+        },
+        'expired-callback': () => {
+          safeLog.log('Recaptcha expired, please solve again');
+        }
+      });
+
+      // Pre-render the verifier to ensure it's ready
+      verifier.render().then((widgetId) => {
+        safeLog.log('Recaptcha rendered with widgetId:', widgetId);
+      }).catch((err) => {
+        safeLog.error('Recaptcha render failed:', err);
+        if (err.code === 'auth/internal-error') {
+          safeLog.error('Internal error during recaptcha render. This usually means the domain is not authorized in Firebase Console.');
+        }
+      });
+
+      setRecaptchaVerifier(verifier);
     } catch (error: any) {
-      console.error('Email login failed:', error);
-      throw error;
+      safeLog.error('Error setting up recaptcha:', error);
     }
   };
 
-  const signUpWithEmail = async (email: string, pass: string, name: string) => {
+  const clearRecaptcha = () => {
+    if (recaptchaVerifier) {
+      try {
+        recaptchaVerifier.clear();
+      } catch (e) {
+        // Ignore internal errors during clear
+      }
+      setRecaptchaVerifier(null);
+    }
+  };
+
+  const sendOtp = async (phoneNumber: string) => {
+    if (!recaptchaVerifier) {
+      safeLog.error('Recaptcha not initialized when calling sendOtp');
+      throw new Error('Recaptcha not initialized. Please try again.');
+    }
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      await updateProfile(userCredential.user, { displayName: name });
-      
-      // Profile creation is handled by onAuthStateChanged
+      return await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
     } catch (error: any) {
-      console.error('Email signup failed:', error);
+      safeLog.error('Send OTP failed:', error);
+      if (error.code === 'auth/internal-error') {
+        throw new Error('Firebase internal error. Please ensure your domain is added to Authorized Domains in Firebase Console.');
+      }
+      if (error.code === 'auth/invalid-phone-number') {
+        throw new Error('Invalid phone number. Please include country code (e.g., +91).');
+      }
       throw error;
     }
   };
@@ -107,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const querySnapshot = await getDocs(q);
       return !querySnapshot.empty;
     } catch (error) {
-      console.error('Error checking user existence:', error);
+      safeLog.error('Error checking user existence:', error);
       return false;
     }
   };
@@ -116,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
     } catch (error) {
-      console.error('Logout failed:', error);
+      safeLog.error('Logout failed:', error);
     }
   };
 
@@ -126,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await updateDoc(doc(db, 'users', firebaseUser.uid), { role });
       setUser(prev => prev ? { ...prev, role } : null);
     } catch (error) {
-      console.error('Update role failed:', error);
+      safeLog.error('Update role failed:', error);
     }
   };
 
@@ -137,8 +196,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       loading, 
       isAuthReady, 
       loginWithGoogle, 
-      loginWithEmail,
-      signUpWithEmail,
+      setupRecaptcha,
+      clearRecaptcha,
+      sendOtp,
       logout,
       updateUserRole,
       checkUserExists

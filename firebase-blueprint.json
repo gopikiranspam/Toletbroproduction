@@ -88,6 +88,9 @@
         "email": {
           "type": "string"
         },
+        "phone": {
+          "type": "string"
+        },
         "role": {
           "type": "string",
           "enum": ["ADMIN", "OWNER", "FINDER"]

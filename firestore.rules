@@ -32,7 +32,8 @@ service cloud.firestore {
     //   - id: string (required)
     //   - role: string (required, enum: ["ADMIN", "OWNER", "FINDER"])
     //   - name: string
-    //   - email: string
+    //   - email: string (optional)
+    //   - phone: string (optional)
     //
     // ===============================================================
 
@@ -104,11 +105,12 @@ service cloud.firestore {
     }
 
     function isValidUser(data) {
-      return data.keys().hasAll(['id', 'role', 'name', 'email']) &&
+      return data.keys().hasAll(['id', 'role']) &&
              data.id is string && data.id.size() > 0 &&
              data.role in ["ADMIN", "OWNER", "FINDER"] &&
-             data.name is string && data.name.size() < 100 &&
-             isValidEmail(data.email);
+             (!('name' in data) || (data.name is string && data.name.size() < 100)) &&
+             (!('email' in data) || data.email == "" || isValidEmail(data.email)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 20));
     }
 
     // ===============================================================

@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Property, QRCodeData, Owner, OperationType } from '../types';
+import { safeLog, safeStringify } from '../utils/logger';
 
 // Error handler for Firestore permissions
 const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
@@ -34,8 +35,10 @@ const handleFirestoreError = (error: unknown, operationType: OperationType, path
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+
+  const stringifiedInfo = safeStringify(errInfo);
+  safeLog.error('Firestore Error: ', stringifiedInfo);
+  throw new Error(stringifiedInfo);
 };
 
 // Test connection to Firestore

@@ -144,11 +144,22 @@ const HomePage = () => {
 
 const AppContent = () => {
   const { user } = useAuth();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authConfig, setAuthConfig] = useState<{ isOpen: boolean; mode: 'USER' | 'ADMIN' }>({
+    isOpen: false,
+    mode: 'USER'
+  });
+
+  const openAuth = (mode: 'USER' | 'ADMIN' = 'USER') => {
+    setAuthConfig({ isOpen: true, mode });
+  };
+
+  const closeAuth = () => {
+    setAuthConfig(prev => ({ ...prev, isOpen: false }));
+  };
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] selection:bg-brand selection:text-black transition-colors duration-300">
-      <Navbar user={user} onOpenAuth={() => setIsAuthModalOpen(true)} />
+      <Navbar onOpenAuth={() => openAuth('USER')} />
       
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -159,21 +170,22 @@ const AppContent = () => {
         <Route path="/search/:city" element={<SearchPage />} />
         <Route path="/search/:city/:area" element={<SearchPage />} />
         <Route path="/dashboard/qr" element={<OwnerQRDashboard />} />
-        <Route path="/admin/qr" element={<AdminQRPanel />} />
+        <Route path="/admin/qr" element={<AdminQRPanel onOpenAuth={() => openAuth('ADMIN')} />} />
         <Route path="/scan" element={<ScannerPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/list-property" element={<ListProperty onOpenAuth={() => setIsAuthModalOpen(true)} />} />
+        <Route path="/list-property" element={<ListProperty onOpenAuth={() => openAuth('USER')} />} />
       </Routes>
 
       <Footer />
       
-      <MobileTabs user={user} onOpenAuth={() => setIsAuthModalOpen(true)} />
+      <MobileTabs user={user} onOpenAuth={() => openAuth('USER')} />
       
       <AnimatePresence>
-        {isAuthModalOpen && (
+        {authConfig.isOpen && (
           <AuthModal 
-            isOpen={isAuthModalOpen} 
-            onClose={() => setIsAuthModalOpen(false)} 
+            isOpen={authConfig.isOpen} 
+            onClose={closeAuth} 
+            mode={authConfig.mode}
           />
         )}
       </AnimatePresence>

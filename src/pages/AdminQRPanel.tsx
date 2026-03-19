@@ -7,7 +7,11 @@ import { Plus, Download, LayoutGrid, List, Loader2, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-export const AdminQRPanel: React.FC = () => {
+interface AdminQRPanelProps {
+  onOpenAuth: () => void;
+}
+
+export const AdminQRPanel: React.FC<AdminQRPanelProps> = ({ onOpenAuth }) => {
   const navigate = useNavigate();
   const { user, isAuthReady } = useAuth();
   const [count, setCount] = useState(5);
@@ -79,12 +83,20 @@ export const AdminQRPanel: React.FC = () => {
         </div>
         <h2 className="text-2xl font-bold text-[var(--text-primary)]">Access Restricted</h2>
         <p className="mt-2 text-[var(--text-secondary)]">This panel is only available for Administrators.</p>
-        <button 
-          onClick={() => navigate('/')}
-          className="mt-8 rounded-2xl bg-brand px-8 py-4 font-bold text-black transition-transform hover:scale-105"
-        >
-          Go to Home
-        </button>
+        <div className="mt-8 flex gap-4">
+          <button 
+            onClick={() => navigate('/')}
+            className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] px-8 py-4 font-bold text-[var(--text-primary)] transition-transform hover:scale-105"
+          >
+            Go to Home
+          </button>
+          <button 
+            onClick={onOpenAuth}
+            className="rounded-2xl bg-brand px-8 py-4 font-bold text-black transition-transform hover:scale-105"
+          >
+            Admin Login
+          </button>
+        </div>
       </div>
     );
   }
