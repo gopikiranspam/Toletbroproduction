@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { 
   onAuthStateChanged, 
   User as FirebaseUser, 
@@ -14,6 +14,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
 import { User, UserRole } from '../types';
 import { safeLog } from '../utils/logger';
 
@@ -39,8 +40,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
+  const isRecaptchaInitialized = useRef(false);
 
   useEffect(() => {
+    // Diagnostics check on mount
+    const checkConfig = () => {
+      safeLog.log('DEEP DIVE: Firebase Config Check:', {
+        projectId: firebaseConfig.projectId,
+        authDomain: firebaseConfig.authDomain,
+        apiKey: firebaseConfig.apiKey ? 'Present (starts with ' + firebaseConfig.apiKey.substring(0, 5) + '...)' : 'MISSING',
+        appId: firebaseConfig.appId ? 'Present' : 'MISSING'
+      });
+      
+      if (!firebaseConfig.apiKey) {
+        safeLog.error('CRITICAL: API Key is missing from firebase-applet-config.json');
+      }
+      
+      if (firebaseConfig.authDomain && !firebaseConfig.authDomain.includes('firebaseapp.com')) {
+        safeLog.warn('Warning: authDomain looks unusual:', firebaseConfig.authDomain);
+      }
+      
+      safeLog.log('Current Hostname:', window.location.hostname);
+    };
+    checkConfig();
+
     const unsubscribe = onAuthStateChanged(auth, async (fUser) => {
       setFirebaseUser(fUser);
       if (fUser) {
@@ -74,6 +97,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // Initialize recaptcha once on mount
+    const timer = setTimeout(() => {
+      setupRecaptcha('recaptcha-container');
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('email');
@@ -86,13 +117,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const setupRecaptcha = (container: HTMLElement | string) => {
-    if (!container) {
-      safeLog.error('Recaptcha container is missing');
+  const setupRecaptcha = (containerOrId: HTMLElement | string) => {
+    if (!containerOrId) {
+      safeLog.error('Recaptcha container or ID is missing');
       return;
     }
 
+    // If already initialized, don't do it again unless it's a different container
+    if (isRecaptchaInitialized.current && recaptchaVerifier) {
+      safeLog.log('Recaptcha already initialized, skipping setup');
+      return;
+    }
+
+    safeLog.log('DEEP DIVE: Initializing RecaptchaVerifier with:', typeof containerOrId === 'string' ? containerOrId : 'HTMLElement');
+    safeLog.log('Auth Domain:', auth.config.authDomain);
+    safeLog.log('API Key:', auth.config.apiKey ? 'Present' : 'MISSING');
+
     try {
+      // If it's an ID string, verify the element exists
+      if (typeof containerOrId === 'string') {
+        const el = document.getElementById(containerOrId);
+        if (!el) {
+          safeLog.error(`Element with ID "${containerOrId}" not found in DOM`);
+          return;
+        }
+        el.innerHTML = ''; // Clear it
+      } else {
+        containerOrId.innerHTML = ''; // Clear it
+      }
+
       // Clean up existing verifier if it exists
       if (recaptchaVerifier) {
         try {
@@ -103,30 +156,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Initialize new verifier
-      // Using 'invisible' size by default. 
-      const verifier = new RecaptchaVerifier(auth, container, {
+      // Using 'invisible' size for better UX and reliability.
+      const verifier = new RecaptchaVerifier(auth, containerOrId, {
         size: 'invisible',
         callback: (response: any) => {
           safeLog.log('Recaptcha resolved successfully');
         },
         'expired-callback': () => {
-          safeLog.log('Recaptcha expired, please solve again');
+          safeLog.log('Recaptcha expired, resetting...');
+          verifier.render().then(widgetId => {
+            if ((window as any).grecaptcha) {
+              (window as any).grecaptcha.reset(widgetId);
+            }
+          });
         }
       });
 
       // Pre-render the verifier to ensure it's ready
+      safeLog.log('Attempting to render Recaptcha...');
       verifier.render().then((widgetId) => {
-        safeLog.log('Recaptcha rendered with widgetId:', widgetId);
+        safeLog.log('Recaptcha rendered successfully with widgetId:', widgetId);
+        isRecaptchaInitialized.current = true;
       }).catch((err) => {
-        safeLog.error('Recaptcha render failed:', err);
-        if (err.code === 'auth/internal-error') {
-          safeLog.error('Internal error during recaptcha render. This usually means the domain is not authorized in Firebase Console.');
+        safeLog.error('Recaptcha render failed with error:', err);
+        isRecaptchaInitialized.current = false;
+        
+        // Detailed deep-dive logging for internal-error
+        if (err.code === 'auth/internal-error' || err.message?.includes('internal-error')) {
+          safeLog.error('DEEP DIVE: auth/internal-error detected during render.');
+          safeLog.error('This is a CRITICAL configuration error. Please check:');
+          safeLog.error('1. Identity Toolkit API: https://console.cloud.google.com/apis/library/identitytoolkit.googleapis.com');
+          safeLog.error('2. API Key Restrictions: https://console.cloud.google.com/apis/credentials');
+          safeLog.error('3. Authorized Domains: https://console.firebase.google.com/project/_/authentication/settings');
+          safeLog.error('4. Current Domain: ' + window.location.hostname);
         }
       });
 
       setRecaptchaVerifier(verifier);
     } catch (error: any) {
       safeLog.error('Error setting up recaptcha:', error);
+      isRecaptchaInitialized.current = false;
     }
   };
 
@@ -138,6 +207,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Ignore internal errors during clear
       }
       setRecaptchaVerifier(null);
+      isRecaptchaInitialized.current = false;
+      safeLog.log('Recaptcha cleared successfully');
     }
   };
 
@@ -147,9 +218,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Recaptcha not initialized. Please try again.');
     }
     try {
+      // signInWithPhoneNumber handles rendering if not already rendered
       return await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
     } catch (error: any) {
       safeLog.error('Send OTP failed:', error);
+      
+      // Handle timeout specifically
+      if (error.message?.includes('timeout') || error.code === 'auth/captcha-check-failed') {
+        safeLog.log('Recaptcha timeout or failure, resetting...');
+        try {
+          // Reset the verifier if possible
+          const widgetId = await recaptchaVerifier.render();
+          (window as any).grecaptcha?.reset(widgetId);
+        } catch (e) {
+          safeLog.warn('Failed to reset recaptcha:', e);
+        }
+        throw new Error('Verification timed out. Please try again.');
+      }
+
       if (error.code === 'auth/internal-error') {
         throw new Error('Firebase internal error. Please ensure your domain is added to Authorized Domains in Firebase Console.');
       }

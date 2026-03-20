@@ -189,6 +189,9 @@ const AppContent = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Global hidden reCAPTCHA container */}
+      <div id="recaptcha-container" className="recaptcha-container"></div>
     </div>
   );
 };

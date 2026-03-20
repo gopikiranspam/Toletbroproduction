@@ -19,10 +19,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
   const [step, setStep] = useState<'PHONE_INPUT' | 'OTP_INPUT' | 'ROLE' | 'ADMIN_LOGIN'>('PHONE_INPUT');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const recaptchaRef = useRef<HTMLDivElement>(null);
 
   // Phone Auth State
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+91 ');
   const [otp, setOtp] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
@@ -44,24 +43,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
         setStep('ADMIN_LOGIN');
       } else {
         setStep('PHONE_INPUT');
-        // Initialize recaptcha when modal opens for USER mode
-        // Wait for the container to be in the DOM
-        const timer = setTimeout(() => {
-          if (recaptchaRef.current) {
-            safeLog.log('Setting up recaptcha on element:', recaptchaRef.current.tagName);
-            setupRecaptcha(recaptchaRef.current);
-          } else {
-            safeLog.warn('Recaptcha ref is null during initialization');
-          }
-        }, 100); // Reduced delay, but still some to ensure mount
-        return () => clearTimeout(timer);
       }
-    } else {
-      // Clear recaptcha when modal closes
-      clearRecaptcha();
-      setResendTimer(0);
     }
-  }, [isOpen, mode, setupRecaptcha, clearRecaptcha]);
+  }, [isOpen, mode]);
 
   useEffect(() => {
     if (user && (step === 'PHONE_INPUT' || step === 'OTP_INPUT' || step === 'ADMIN_LOGIN')) {
@@ -95,7 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
     setIsLoggingIn(true);
     setError(null);
     try {
-      const result = await sendOtp(phoneNumber);
+      const result = await sendOtp(phoneNumber.trim());
       setConfirmationResult(result);
       setStep('OTP_INPUT');
       setResendTimer(60); // 60 seconds cooldown
@@ -104,11 +88,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
       // If recaptcha failed, try re-initializing it
       if (err.code === 'auth/internal-error' || err.code === 'auth/argument-error' || err.message?.includes('internal-error')) {
         safeLog.log('Retrying recaptcha setup due to error');
-        if (recaptchaRef.current) {
-          setupRecaptcha(recaptchaRef.current);
-        }
+        setupRecaptcha('recaptcha-container');
+        setError(`Firebase internal error. Please ensure "${window.location.hostname}" is added to Authorized Domains in Firebase Console.`);
+      } else {
+        setError(err.message || 'Failed to send OTP. Please try again.');
       }
-      setError(err.message || 'Failed to send OTP. Please try again.');
     } finally {
       setIsLoggingIn(false);
     }
@@ -175,8 +159,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
           </p>
         </div>
 
-        <div ref={recaptchaRef} className="recaptcha-container"></div>
-
         <AnimatePresence mode="wait">
           {step === 'ADMIN_LOGIN' && (
             <motion.div
@@ -203,7 +185,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
 
               {error && (
                 <div className="rounded-xl bg-red-500/10 p-4 text-center text-xs font-medium text-red-500">
-                  {error}
+                  <p>{error}</p>
+                  {error.includes('internal-error') && (
+                    <div className="mt-2 pt-2 border-t border-red-500/20 text-[10px] text-red-400 text-left">
+                      <p className="font-bold mb-1">Deep Dive Troubleshooting:</p>
+                      <ul className="list-disc ml-3 space-y-0.5">
+                        <li>Enable <strong>Identity Toolkit API</strong> in Google Cloud Console.</li>
+                        <li>Verify <strong>Phone Auth</strong> is enabled in Firebase.</li>
+                        <li>Ensure <strong>{window.location.hostname}</strong> is in Authorized Domains.</li>
+                        <li>Check browser console for detailed logs.</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -244,7 +237,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
 
               {error && (
                 <div className="rounded-xl bg-red-500/10 p-4 text-center text-xs font-medium text-red-500">
-                  {error}
+                  <p>{error}</p>
+                  {error.includes('internal-error') && (
+                    <div className="mt-2 pt-2 border-t border-red-500/20 text-[10px] text-red-400 text-left">
+                      <p className="font-bold mb-1">Deep Dive Troubleshooting:</p>
+                      <ul className="list-disc ml-3 space-y-0.5">
+                        <li>Enable <strong>Identity Toolkit API</strong> in Google Cloud Console.</li>
+                        <li>Verify <strong>Phone Auth</strong> is enabled in Firebase.</li>
+                        <li>Ensure <strong>{window.location.hostname}</strong> is in Authorized Domains.</li>
+                        <li>Check browser console for detailed logs.</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -307,7 +311,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
 
               {error && (
                 <div className="rounded-xl bg-red-500/10 p-4 text-center text-xs font-medium text-red-500">
-                  {error}
+                  <p>{error}</p>
+                  {error.includes('internal-error') && (
+                    <div className="mt-2 pt-2 border-t border-red-500/20 text-[10px] text-red-400 text-left">
+                      <p className="font-bold mb-1">Deep Dive Troubleshooting:</p>
+                      <ul className="list-disc ml-3 space-y-0.5">
+                        <li>Enable <strong>Identity Toolkit API</strong> in Google Cloud Console.</li>
+                        <li>Verify <strong>Phone Auth</strong> is enabled in Firebase.</li>
+                        <li>Ensure <strong>{window.location.hostname}</strong> is in Authorized Domains.</li>
+                        <li>Check browser console for detailed logs.</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
