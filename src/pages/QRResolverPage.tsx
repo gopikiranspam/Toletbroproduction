@@ -89,46 +89,62 @@ export const QRResolverPage: React.FC = () => {
 
   if (status === 'error') {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center text-center px-6">
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 text-red-500">
-          <AlertCircle size={40} />
+      <div className="flex min-h-[80vh] flex-col items-center justify-center text-center px-6 py-12">
+        <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-red-500/10 text-red-500 border border-red-500/20">
+          <AlertCircle size={48} />
         </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Oops!</h2>
-        <p className="mt-2 text-[var(--text-secondary)]">{message}</p>
-        <button 
-          onClick={() => navigate('/')}
-          className="mt-8 rounded-2xl bg-brand px-8 py-3 font-bold text-black transition-transform hover:scale-105"
-        >
-          Go Back Home
-        </button>
+        <h2 className="text-3xl font-bold text-[var(--text-primary)]">Invalid QR Code</h2>
+        <p className="mt-4 text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+          {message || 'This QR code was not recognized by our system. Please ensure you are scanning an official ToLetBro Smart Board.'}
+        </p>
+        <div className="mt-10 flex flex-col sm:flex-row gap-4 w-full max-w-xs sm:max-w-md">
+          <button 
+            onClick={() => navigate('/')}
+            className="flex-1 rounded-2xl bg-brand px-8 py-4 font-bold text-black transition-all hover:scale-105 shadow-lg shadow-brand/20"
+          >
+            Go to Home
+          </button>
+          <button 
+            onClick={() => window.location.reload()}
+            className="flex-1 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] px-8 py-4 font-bold text-[var(--text-primary)] transition-all hover:scale-105"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   if (status === 'unlinked') {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center text-center px-6">
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand/10 text-brand">
-          <QrCode size={40} />
+      <div className="flex min-h-[80vh] flex-col items-center justify-center text-center px-6 py-12">
+        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-brand/10 text-brand border border-brand/20">
+          <QrCode size={48} />
         </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Board Not Activated</h2>
-        <p className="mt-2 text-[var(--text-secondary)] max-w-xs">
-          This board is not yet activated by the owner. Are you the owner?
+        <h2 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Board Not Activated</h2>
+        <p className="mt-4 text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+          This Smart Tolet Board is official but has not been linked to a property yet. 
+          <span className="block mt-2 font-semibold text-brand">Are you the property owner?</span>
         </p>
         
-        <div className="mt-12 space-y-4 w-full max-w-xs">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-50">Are you the owner?</p>
-          <button 
-            onClick={() => navigate(`/link-qr/${qrId}`)}
-            className="w-full rounded-2xl bg-brand py-4 font-bold text-black transition-transform hover:scale-105"
-          >
-            Login to Claim
-          </button>
+        <div className="mt-12 space-y-4 w-full max-w-xs sm:max-w-md">
+          <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border)] p-6 mb-6">
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
+              To activate this board, please login to your account and link it to your property listing.
+            </p>
+            <button 
+              onClick={() => navigate(`/link-qr/${qrId}`)}
+              className="w-full rounded-xl bg-brand py-4 font-bold text-black transition-all hover:scale-105 shadow-lg shadow-brand/20 flex items-center justify-center gap-2"
+            >
+              <span>Login to Activate Board</span>
+            </button>
+          </div>
+          
           <button 
             onClick={() => navigate('/')}
-            className="w-full rounded-2xl border border-[var(--border)] py-4 font-bold text-[var(--text-primary)] transition-transform hover:scale-105"
+            className="w-full rounded-xl border border-[var(--border)] py-4 font-bold text-[var(--text-primary)] transition-all hover:scale-105"
           >
-            Back to Home
+            Explore Other Properties
           </button>
         </div>
       </div>
