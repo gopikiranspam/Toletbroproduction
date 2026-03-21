@@ -17,6 +17,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } fro
 import firebaseConfig from '../../firebase-applet-config.json';
 import { User, UserRole } from '../types';
 import { safeLog } from '../utils/logger';
+import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -29,7 +30,9 @@ interface AuthContextType {
   sendOtp: (phoneNumber: string) => Promise<ConfirmationResult>;
   logout: () => Promise<void>;
   updateUserRole: (role: UserRole) => Promise<void>;
-  checkUserExists: (email: string) => Promise<boolean>;
+  completeProfile: (name: string, role: UserRole) => Promise<void>;
+  checkUserExists: (uid: string) => Promise<boolean>;
+  toggleFavorite: (propertyId: string) => Promise<boolean>;
   authModal: { isOpen: boolean; mode: 'USER' | 'ADMIN' };
   openAuth: (mode?: 'USER' | 'ADMIN') => void;
   closeAuth: () => void;
@@ -79,17 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (userDoc.exists()) {
             setUser(userDoc.data() as User);
           } else {
-            // Initial profile for new user
-            const role: UserRole = fUser.email === 'gopikiranspam@gmail.com' ? 'ADMIN' : 'FINDER';
-            const newUser: User = {
-              id: fUser.uid,
-              name: fUser.displayName || 'User',
-              phone: fUser.phoneNumber || '',
-              email: fUser.email || '',
-              role
-            };
-            await setDoc(doc(db, 'users', fUser.uid), newUser);
-            setUser(newUser);
+            // Do NOT auto-create profile here. 
+            // AuthModal will handle profile completion for new users.
+            setUser(null);
           }
         } catch (error) {
           safeLog.error('Error fetching user profile:', error);
@@ -253,14 +248,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const checkUserExists = async (email: string): Promise<boolean> => {
+  const checkUserExists = async (uid: string): Promise<boolean> => {
     try {
-      const q = query(collection(db, 'users'), where('email', '==', email));
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      return userDoc.exists();
     } catch (error) {
       safeLog.error('Error checking user existence:', error);
       return false;
+    }
+  };
+
+  const completeProfile = async (name: string, role: UserRole) => {
+    if (!firebaseUser) return;
+    try {
+      const newUser: User = {
+        id: firebaseUser.uid,
+        name,
+        phone: firebaseUser.phoneNumber || '',
+        email: firebaseUser.email || '',
+        role,
+        favorites: []
+      };
+      await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+      setUser(newUser);
+    } catch (error) {
+      safeLog.error('Complete profile failed:', error);
+      throw error;
     }
   };
 
@@ -279,6 +292,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(prev => prev ? { ...prev, role } : null);
     } catch (error) {
       safeLog.error('Update role failed:', error);
+    }
+  };
+
+  const toggleFavorite = async (propertyId: string) => {
+    if (!user) return false;
+    
+    try {
+      const newStatus = await api.toggleFavorite(user.id, propertyId);
+      
+      // Update local state
+      setUser(prev => {
+        if (!prev) return prev;
+        const favorites = prev.favorites || [];
+        const newFavorites = newStatus 
+          ? [...favorites, propertyId]
+          : favorites.filter(id => id !== propertyId);
+        
+        return {
+          ...prev,
+          favorites: newFavorites
+        };
+      });
+      
+      return newStatus;
+    } catch (error) {
+      safeLog.error("Failed to toggle favorite:", error);
+      return false;
     }
   };
 
@@ -302,7 +342,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendOtp,
       logout,
       updateUserRole,
+      completeProfile,
       checkUserExists,
+      toggleFavorite,
       authModal,
       openAuth,
       closeAuth

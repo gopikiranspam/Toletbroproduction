@@ -15,10 +15,14 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'USER' }) => {
-  const { user, loginWithGoogle, setupRecaptcha, clearRecaptcha, sendOtp, updateUserRole } = useAuth();
-  const [step, setStep] = useState<'PHONE_INPUT' | 'OTP_INPUT' | 'ROLE' | 'ADMIN_LOGIN'>('PHONE_INPUT');
+  const { user, firebaseUser, loginWithGoogle, setupRecaptcha, clearRecaptcha, sendOtp, updateUserRole, checkUserExists, completeProfile } = useAuth();
+  const [step, setStep] = useState<'PHONE_INPUT' | 'OTP_INPUT' | 'NAME_INPUT' | 'ROLE' | 'ADMIN_LOGIN'>('PHONE_INPUT');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Profile Data
+  const [name, setName] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
   // Phone Auth State
   const [phoneNumber, setPhoneNumber] = useState('+91 ');
@@ -49,13 +53,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
 
   useEffect(() => {
     if (user && (step === 'PHONE_INPUT' || step === 'OTP_INPUT' || step === 'ADMIN_LOGIN')) {
-      if (user.role === 'ADMIN' || mode === 'ADMIN') {
-        onClose();
-      } else {
-        setStep('ROLE');
-      }
+      onClose();
+    } else if (firebaseUser && !user && (step === 'PHONE_INPUT' || step === 'OTP_INPUT')) {
+      // User is authenticated but has no profile
+      setStep('NAME_INPUT');
     }
-  }, [user, step, onClose, mode]);
+  }, [user, firebaseUser, step, onClose, mode]);
 
   const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
@@ -104,7 +107,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
     setIsLoggingIn(true);
     setError(null);
     try {
-      await confirmationResult.confirm(otp);
+      const result = await confirmationResult.confirm(otp);
+      const fUser = result.user;
+      if (fUser) {
+        const exists = await checkUserExists(fUser.uid);
+        if (exists) {
+          onClose();
+        } else {
+          setStep('NAME_INPUT');
+        }
+      }
     } catch (err: any) {
       safeLog.error('Verify OTP error:', err);
       setError('Invalid OTP. Please try again.');
@@ -113,12 +125,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
     }
   };
 
-  const handleSelectRole = async (selectedRole: UserRole) => {
+  const handleNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name.trim().length < 2) {
+      setError('Please enter a valid name');
+      return;
+    }
+    setStep('ROLE');
+  };
+
+  const handleSelectRole = async (role: UserRole) => {
+    setIsLoggingIn(true);
     try {
-      await updateUserRole(selectedRole);
+      await completeProfile(name, role);
       onClose();
     } catch (error) {
-      safeLog.error('Role selection error:', error);
+      safeLog.error('Profile completion error:', error);
+      setError('Failed to complete profile. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -152,10 +177,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
             {mode === 'ADMIN' ? <ShieldCheck size={32} /> : <LogIn size={32} />}
           </div>
           <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-            {step === 'ROLE' ? 'One last step' : mode === 'ADMIN' ? 'Admin Access' : 'Welcome to ToLetBro'}
+            {step === 'ROLE' ? 'One last step' : step === 'NAME_INPUT' ? 'What should we call you?' : mode === 'ADMIN' ? 'Admin Access' : 'Welcome to ToLetBro'}
           </h2>
           <p className="text-sm text-[var(--text-secondary)]">
-            {step === 'ROLE' ? 'Help us personalize your experience' : mode === 'ADMIN' ? 'Secure administrator login' : 'Experience smart real estate'}
+            {step === 'ROLE' ? 'Help us personalize your experience' : step === 'NAME_INPUT' ? 'Enter your name to continue' : mode === 'ADMIN' ? 'Secure administrator login' : 'Experience smart real estate'}
           </p>
         </div>
 
@@ -328,6 +353,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
             </motion.div>
           )}
 
+          {step === 'NAME_INPUT' && (
+            <motion.div
+              key="name-input"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6"
+            >
+              <form onSubmit={handleNameSubmit} className="space-y-4">
+                <div className="relative">
+                  <UserCircle className="absolute top-4 left-4 text-[var(--text-secondary)]" size={20} />
+                  <input 
+                    type="text"
+                    placeholder="Your Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    autoFocus
+                    className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] py-4 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="flex w-full items-center justify-center gap-3 rounded-xl bg-brand py-4 font-bold text-black transition-transform hover:scale-[1.02]"
+                >
+                  Continue
+                </button>
+              </form>
+            </motion.div>
+          )}
+
           {step === 'ROLE' && (
             <motion.div
               key="role"
@@ -336,11 +392,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              <p className="mb-6 text-center text-sm text-[var(--text-secondary)]">Tell us how you'll use ToLetBro</p>
+              <p className="mb-6 text-center text-sm text-[var(--text-secondary)]">Hi {name}, tell us how you'll use ToLetBro</p>
               
               <button 
                 onClick={() => handleSelectRole('OWNER')}
-                className="flex w-full items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left transition-all hover:border-brand/50 hover:bg-brand/5"
+                disabled={isLoggingIn}
+                className="flex w-full items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left transition-all hover:border-brand/50 hover:bg-brand/5 disabled:opacity-50"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand/10 text-brand">
                   <Home size={24} />
@@ -353,7 +410,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
 
               <button 
                 onClick={() => handleSelectRole('FINDER')}
-                className="flex w-full items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left transition-all hover:border-brand/50 hover:bg-brand/5"
+                disabled={isLoggingIn}
+                className="flex w-full items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left transition-all hover:border-brand/50 hover:bg-brand/5 disabled:opacity-50"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand/10 text-brand">
                   <UserCircle size={24} />
@@ -363,6 +421,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
                   <p className="text-xs text-[var(--text-secondary)]">I'm looking for my next dream home</p>
                 </div>
               </button>
+
+              {isLoggingIn && (
+                <div className="flex justify-center pt-4">
+                  <Loader2 className="animate-spin text-brand" size={24} />
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

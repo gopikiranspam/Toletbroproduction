@@ -31,6 +31,7 @@ import { ScannerPage } from './pages/ScannerPage';
 import { QRResolverPage } from './pages/QRResolverPage';
 import { ListProperty } from './pages/ListProperty';
 import { Dashboard } from './pages/Dashboard';
+import { FavoritesPage } from './pages/FavoritesPage';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -285,6 +286,7 @@ const AppContent = () => {
         <Route path="/search/:city/:area" element={<SearchPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/qr" element={<OwnerQRDashboard />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/admin/qr" element={<AdminQRPanel onOpenAuth={() => openAuth('ADMIN')} />} />
         <Route path="/scan" element={<ScannerPage />} />
         <Route path="/profile" element={<ProfilePage />} />

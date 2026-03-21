@@ -84,7 +84,8 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const totalStats = properties.reduce((acc, p) => ({
+  const activeProperties = properties.filter(p => p.isActive && !p.isOccupied && !p.isDeleted);
+  const totalStats = activeProperties.reduce((acc, p) => ({
     scans: acc.scans + (p.scans || 0),
     views: acc.views + (p.views || 0),
     favorites: acc.favorites + (p.favoritesCount || 0),

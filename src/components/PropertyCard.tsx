@@ -3,8 +3,7 @@ import { Bed, Bath, Maximize, MapPin, Heart } from 'lucide-react';
 import { Property } from '../types';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../firebase';
-import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface PropertyCardProps {
   property: Property;
@@ -12,29 +11,17 @@ interface PropertyCardProps {
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const navigate = useNavigate();
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    const checkFavorite = async () => {
-      if (auth.currentUser) {
-        const user = await api.getOwnerById(auth.currentUser.uid);
-        if (user?.favorites?.includes(property.id)) {
-          setIsFavorite(true);
-        }
-      }
-    };
-    checkFavorite();
-  }, [property.id]);
+  const { user, openAuth, toggleFavorite } = useAuth();
+  const isFavorite = user?.favorites?.includes(property.id) || false;
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!auth.currentUser) {
-      alert('Please login to favorite properties');
+    if (!user) {
+      openAuth();
       return;
     }
 
-    const newStatus = await api.toggleFavorite(auth.currentUser.uid, property.id);
-    setIsFavorite(newStatus);
+    await toggleFavorite(property.id);
   };
 
   const handleClick = () => {

@@ -23,14 +23,18 @@ import {
   Building2
 } from 'lucide-react';
 
+import { useAuth } from '../context/AuthContext';
+
 export const PropertyDetailsPage: React.FC = () => {
   const { propertySlugId } = useParams<{ propertySlugId: string }>();
   const [searchParams] = useSearchParams();
+  const { user, openAuth, toggleFavorite: toggleFavoriteInContext } = useAuth();
   const [property, setProperty] = useState<Property | null>(null);
   const [owner, setOwner] = useState<Owner | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
+  
+  const isFavorite = property ? user?.favorites?.includes(property.id) : false;
 
   useEffect(() => {
     if (propertySlugId) {
@@ -54,14 +58,6 @@ export const PropertyDetailsPage: React.FC = () => {
 
             const o = await api.getOwnerById(p.ownerId);
             if (o) setOwner(o);
-
-            // Check if favorite
-            if (auth.currentUser) {
-              const user = await api.getOwnerById(auth.currentUser.uid);
-              if (user?.favorites?.includes(id)) {
-                setIsFavorite(true);
-              }
-            }
           }
         } catch (error) {
           console.error("Error fetching property details:", error);
@@ -98,13 +94,12 @@ export const PropertyDetailsPage: React.FC = () => {
 
   const handleToggleFavorite = async () => {
     if (!property) return;
-    if (!auth.currentUser) {
-      alert('Please login to favorite properties');
+    if (!user) {
+      openAuth();
       return;
     }
 
-    const newStatus = await api.toggleFavorite(auth.currentUser.uid, property.id);
-    setIsFavorite(newStatus);
+    await toggleFavoriteInContext(property.id);
   };
 
   const handleContactClick = (type: 'call' | 'message') => {
