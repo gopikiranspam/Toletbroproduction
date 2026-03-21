@@ -87,6 +87,9 @@ export type DNDReason = 'Busy' | 'Out of station' | 'Not available';
 export interface PrivacySettings {
   doNotDisturb: {
     enabled: boolean;
+    mode: 'MANUAL' | 'SCHEDULED';
+    startDate?: string;
+    endDate?: string;
     startTime: string;
     endTime: string;
     reason: DNDReason;

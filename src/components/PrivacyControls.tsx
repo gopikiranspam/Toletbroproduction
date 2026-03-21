@@ -6,6 +6,7 @@ import {
   MessageSquare, 
   Lock, 
   Clock, 
+  Calendar,
   AlertCircle,
   CheckCircle2,
   ChevronRight,
@@ -38,6 +39,9 @@ export const PrivacyControls: React.FC = () => {
   const [settings, setSettings] = useState<PrivacySettings>({
     doNotDisturb: {
       enabled: false,
+      mode: 'MANUAL',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
       startTime: "09:00",
       endTime: "21:00",
       reason: "Busy"
@@ -89,6 +93,49 @@ export const PrivacyControls: React.FC = () => {
     });
   };
 
+  const TimePicker = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => {
+    const [hours, minutes] = value.split(':');
+    
+    return (
+      <div className="space-y-2">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">{label}</label>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <select 
+              value={hours}
+              onChange={(e) => onChange(`${e.target.value}:${minutes}`)}
+              className="w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-2.5 px-3 text-xs font-medium focus:border-brand focus:outline-none"
+            >
+              {Array.from({ length: 24 }).map((_, i) => {
+                const h = i.toString().padStart(2, '0');
+                const displayH = i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`;
+                return <option key={h} value={h}>{displayH}</option>;
+              })}
+            </select>
+            <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] opacity-50">
+              <ChevronRight size={12} className="rotate-90" />
+            </div>
+          </div>
+          <span className="text-[var(--text-secondary)] font-bold">:</span>
+          <div className="relative flex-1">
+            <select 
+              value={minutes}
+              onChange={(e) => onChange(`${hours}:${e.target.value}`)}
+              className="w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-2.5 px-3 text-xs font-medium focus:border-brand focus:outline-none"
+            >
+              {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
+                <option key={m} value={m}>{m} min</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] opacity-50">
+              <ChevronRight size={12} className="rotate-90" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4 pb-10">
       {/* Save Button - Prominent at top */}
@@ -138,38 +185,117 @@ export const PrivacyControls: React.FC = () => {
               animate={{ opacity: 1, height: 'auto' }}
               className="space-y-6 border-t border-[var(--border)] bg-[var(--bg)]/30 p-5"
             >
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Start Time</label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={14} />
-                    <input 
-                      type="time" 
-                      value={settings.doNotDisturb.startTime}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        doNotDisturb: { ...prev.doNotDisturb, startTime: e.target.value }
-                      }))}
-                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-2.5 pl-9 pr-3 text-xs focus:border-brand focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">End Time</label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={14} />
-                    <input 
-                      type="time" 
-                      value={settings.doNotDisturb.endTime}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        doNotDisturb: { ...prev.doNotDisturb, endTime: e.target.value }
-                      }))}
-                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-2.5 pl-9 pr-3 text-xs focus:border-brand focus:outline-none"
-                    />
-                  </div>
+              {/* DND Mode Selection */}
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">DND Mode</label>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    onClick={() => setSettings(prev => ({
+                      ...prev,
+                      doNotDisturb: { ...prev.doNotDisturb, mode: 'MANUAL' }
+                    }))}
+                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                      settings.doNotDisturb.mode === 'MANUAL'
+                        ? 'border-brand bg-brand/5 ring-1 ring-brand'
+                        : 'border-[var(--border)] bg-[var(--card-bg)]'
+                    }`}
+                  >
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      settings.doNotDisturb.mode === 'MANUAL' ? 'border-brand bg-brand' : 'border-[var(--border)]'
+                    }`}>
+                      {settings.doNotDisturb.mode === 'MANUAL' && <div className="h-2 w-2 rounded-full bg-black" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[var(--text-primary)]">Manual Mode (Default)</p>
+                      <p className="text-[10px] text-[var(--text-secondary)]">DND will active until you disable it manually.</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setSettings(prev => ({
+                      ...prev,
+                      doNotDisturb: { ...prev.doNotDisturb, mode: 'SCHEDULED' }
+                    }))}
+                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                      settings.doNotDisturb.mode === 'SCHEDULED'
+                        ? 'border-brand bg-brand/5 ring-1 ring-brand'
+                        : 'border-[var(--border)] bg-[var(--card-bg)]'
+                    }`}
+                  >
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      settings.doNotDisturb.mode === 'SCHEDULED' ? 'border-brand bg-brand' : 'border-[var(--border)]'
+                    }`}>
+                      {settings.doNotDisturb.mode === 'SCHEDULED' && <div className="h-2 w-2 rounded-full bg-black" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[var(--text-primary)]">Scheduled Mode</p>
+                      <p className="text-[10px] text-[var(--text-secondary)]">Select specific date & time range for DND.</p>
+                    </div>
+                  </button>
                 </div>
               </div>
+
+              {settings.doNotDisturb.mode === 'SCHEDULED' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-6 rounded-2xl border border-brand/20 bg-brand/5 p-4"
+                >
+                  {/* Date Selection First */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">From Date</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={14} />
+                        <input 
+                          type="date" 
+                          value={settings.doNotDisturb.startDate || ''}
+                          onChange={(e) => setSettings(prev => ({
+                            ...prev,
+                            doNotDisturb: { ...prev.doNotDisturb, startDate: e.target.value }
+                          }))}
+                          className="w-full rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-2.5 pl-9 pr-3 text-xs focus:border-brand focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">To Date</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={14} />
+                        <input 
+                          type="date" 
+                          value={settings.doNotDisturb.endDate || ''}
+                          onChange={(e) => setSettings(prev => ({
+                            ...prev,
+                            doNotDisturb: { ...prev.doNotDisturb, endDate: e.target.value }
+                          }))}
+                          className="w-full rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-2.5 pl-9 pr-3 text-xs focus:border-brand focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time Selection Second - Custom Picker */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <TimePicker 
+                      label="From Time"
+                      value={settings.doNotDisturb.startTime}
+                      onChange={(val) => setSettings(prev => ({
+                        ...prev,
+                        doNotDisturb: { ...prev.doNotDisturb, startTime: val }
+                      }))}
+                    />
+                    <TimePicker 
+                      label="To Time"
+                      value={settings.doNotDisturb.endTime}
+                      onChange={(val) => setSettings(prev => ({
+                        ...prev,
+                        doNotDisturb: { ...prev.doNotDisturb, endTime: val }
+                      }))}
+                    />
+                  </div>
+                </motion.div>
+              )}
 
               <div className="space-y-3">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Reason</label>
