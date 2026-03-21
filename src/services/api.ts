@@ -138,7 +138,9 @@ export const api = {
         images: imageUrls,
         imageUrl: imageUrls[0] || '',
         createdAt: new Date().toISOString(),
-        isActive: true
+        isActive: true,
+        lat: propertyData.lat,
+        lng: propertyData.lng
       };
 
       await setDoc(doc(db, 'properties', propertyId), newProperty);
@@ -248,6 +250,34 @@ export const api = {
     } catch (error) {
       handleFirestoreError(error, 'get' as any, path);
       return undefined;
+    }
+  },
+
+  getNearbyProperties: async (lat: number, lng: number, radiusKm: number = 10): Promise<Property[]> => {
+    const path = 'properties';
+    try {
+      const snapshot = await getDocs(collection(db, path));
+      const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property));
+      
+      // Filter by distance using Haversine formula
+      return allProperties.filter(p => {
+        if (!p.lat || !p.lng) return false;
+        
+        const R = 6371; // Earth's radius in km
+        const dLat = (p.lat - lat) * Math.PI / 180;
+        const dLng = (p.lng - lng) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat * Math.PI / 180) * Math.cos(p.lat * Math.PI / 180) * 
+          Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+        
+        return distance <= radiusKm;
+      });
+    } catch (error) {
+      handleFirestoreError(error, 'list' as any, path);
+      return [];
     }
   }
 };

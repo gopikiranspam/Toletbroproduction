@@ -54,6 +54,10 @@ export interface Property {
   nearbyFacilities: string[];
   userType: UserType;
   
+  // Geolocation
+  lat?: number;
+  lng?: number;
+  
   createdAt: string;
 }
 

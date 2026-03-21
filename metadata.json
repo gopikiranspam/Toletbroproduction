@@ -1,5 +1,5 @@
 {
   "name": "ToLetBro - Dynamic QR Real Estate",
   "description": "A smart real estate platform using dynamic QR codes to connect owners and tenants seamlessly.",
-  "requestFramePermissions": ["camera"]
+  "requestFramePermissions": ["camera", "geolocation"]
 }

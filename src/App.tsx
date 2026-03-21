@@ -7,16 +7,16 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { FounderSection } from './components/FounderSection';
 import { PropertyCard } from './components/PropertyCard';
 import { FilterBar } from './components/FilterBar';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
 import { MobileTabs } from './components/MobileTabs';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, MapPin } from 'lucide-react';
 import { Property } from './types';
 import { api } from './services/api';
+import { mapsService } from './services/mapsService';
 
 // Pages
 import { QRSetupPage } from './pages/QRSetupPage';
@@ -37,6 +37,7 @@ const HomePage = () => {
   const [selectedType, setSelectedType] = useState('All');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isNearbySearch, setIsNearbySearch] = useState(false);
 
   useEffect(() => {
     api.getProperties().then(data => {
@@ -44,6 +45,25 @@ const HomePage = () => {
       setLoading(false);
     });
   }, []);
+
+  const handleNearbySearch = async () => {
+    setLoading(true);
+    setIsNearbySearch(true);
+    try {
+      const pos = await mapsService.getCurrentLocation();
+      const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, 50); // 50km radius
+      setProperties(nearby);
+    } catch (err) {
+      console.error("Nearby search failed:", err);
+      alert("Could not get your location. Please ensure GPS is enabled.");
+      // Fallback to all properties
+      const all = await api.getProperties();
+      setProperties(all);
+      setIsNearbySearch(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProperties = useMemo(() => {
     if (selectedType === 'All') return properties;
@@ -57,20 +77,47 @@ const HomePage = () => {
       {/* Featured Section */}
       <section className="py-24 px-6">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div className="mb-12 flex items-end justify-between">
             <div>
-              <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">
-                Find Your <span className="text-brand">Perfect</span> To-Let
+              <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl text-[var(--text-primary)]">
+                Explore Our <span className="text-brand">Curated</span> Collection
               </h2>
-              <p className="text-[var(--text-secondary)]">Verified properties, direct from owners. No brokers, no hidden costs.</p>
+              <p className="text-[var(--text-secondary)]">Hand-picked luxury properties for the most discerning tastes.</p>
             </div>
-            <button 
-              onClick={() => navigate('/search/any')}
-              className="flex items-center gap-2 text-sm font-bold text-brand transition-all hover:gap-3"
-            >
-              View All Listings <ArrowRight size={18} />
-            </button>
+            <div className="flex flex-col items-end gap-4">
+              <button 
+                onClick={handleNearbySearch}
+                className="flex items-center gap-2 rounded-xl bg-brand/10 px-6 py-3 text-sm font-bold text-brand transition-all hover:bg-brand/20"
+              >
+                <MapPin size={18} />
+                Find Nearby Properties
+              </button>
+              <div className="hidden md:block">
+                <button className="flex items-center gap-2 text-sm font-bold text-brand transition-all hover:gap-3">
+                  View All Properties <ArrowRight size={18} />
+                </button>
+              </div>
+            </div>
           </div>
+
+          {isNearbySearch && (
+            <div className="mb-8 flex items-center justify-between rounded-2xl bg-brand/5 p-4">
+              <p className="text-sm font-medium text-brand">Showing properties within 50km of your location</p>
+              <button 
+                onClick={() => {
+                  setIsNearbySearch(false);
+                  setLoading(true);
+                  api.getProperties().then(data => {
+                    setProperties(data);
+                    setLoading(false);
+                  });
+                }}
+                className="text-xs font-bold uppercase tracking-wider text-brand hover:underline"
+              >
+                Clear Nearby Filter
+              </button>
+            </div>
+          )}
 
           <FilterBar selectedType={selectedType} onSelectType={setSelectedType} />
 
@@ -108,50 +155,55 @@ const HomePage = () => {
 
       {/* Call to Action */}
       <section className="py-24 px-6">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-[3rem] bg-brand px-12 py-20 text-black shadow-2xl shadow-brand/20">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-brand px-12 py-20 text-black">
           <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
             <div>
-              <h2 className="mb-6 text-4xl font-bold tracking-tight md:text-6xl leading-tight">
-                Own a property? <br />
-                Get your <span className="italic">Smart Board.</span>
+              <h2 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl">
+                Ready to find your <br /> next masterpiece?
               </h2>
-              <p className="mb-10 text-lg font-medium opacity-80 leading-relaxed">
-                Join thousands of owners who are saving on brokerage fees. List your property and get a digital-ready Smart Tolet Board today.
+              <p className="mb-10 text-lg font-medium opacity-70">
+                Our expert agents are ready to guide you through the exclusive world of luxury real estate.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button 
-                  onClick={() => navigate('/list-property')}
-                  className="rounded-2xl bg-black px-10 py-5 font-bold text-white transition-all hover:scale-105 shadow-xl"
-                >
-                  List Your Property
+                <button className="rounded-2xl bg-black px-8 py-4 font-bold text-white transition-transform hover:scale-105">
+                  Contact an Agent
                 </button>
                 <button 
-                  onClick={() => navigate('/dashboard/qr')}
-                  className="rounded-2xl border-2 border-black/10 px-10 py-5 font-bold transition-all hover:scale-105"
+                  onClick={() => navigate('/list-property')}
+                  className="rounded-2xl border-2 border-black/10 px-8 py-4 font-bold transition-transform hover:scale-105"
                 >
-                  Manage My Board
+                  List Your Property
                 </button>
               </div>
             </div>
             <div className="relative hidden md:block">
-              <div className="absolute -inset-4 rounded-[3rem] border-2 border-black/10 rotate-3"></div>
               <img 
-                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1000" 
-                alt="Modern Property"
+                src="https://images.unsplash.com/photo-1600585154340-be6199f7d009?auto=format&fit=crop&q=80&w=1000" 
+                alt="Luxury Interior"
                 referrerPolicy="no-referrer"
-                className="relative rounded-[2.5rem] shadow-2xl grayscale hover:grayscale-0 transition-all duration-700"
+                className="rounded-3xl shadow-2xl"
               />
             </div>
           </div>
         </div>
       </section>
-      <FounderSection />
     </main>
   );
 };
 
 const AppContent = () => {
   const { user, authModal, openAuth, closeAuth } = useAuth();
+
+  useEffect(() => {
+    // Silently request GPS permission on mount
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => console.log("GPS permission granted"),
+        () => console.log("GPS permission denied"),
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] selection:bg-brand selection:text-black transition-colors duration-300">

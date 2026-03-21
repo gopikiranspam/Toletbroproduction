@@ -15,9 +15,11 @@ import {
   ChevronLeft,
   Loader2,
   X,
-  Info
+  Info,
+  Navigation
 } from 'lucide-react';
 import { api } from '../services/api';
+import { mapsService } from '../services/mapsService';
 import { useAuth } from '../context/AuthContext';
 import { 
   PropertyCategory, 
@@ -83,10 +85,44 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
     nearbyFacilities: [] as string[],
     userType: 'Owner' as UserType,
     description: '',
+    lat: undefined as number | undefined,
+    lng: undefined as number | undefined,
   });
 
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [fetchingAddress, setFetchingAddress] = useState(false);
+
+  const handleFetchAddress = async () => {
+    setFetchingAddress(true);
+    try {
+      const pos = await mapsService.getCurrentLocation();
+      const result = await mapsService.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+      if (result) {
+        setFormData(prev => ({
+          ...prev,
+          locality: result.locality || prev.locality,
+          city: result.city || prev.city,
+          state: result.state || prev.state,
+          pincode: result.pincode || prev.pincode,
+          fullAddress: result.fullAddress || prev.fullAddress,
+          lat: result.lat,
+          lng: result.lng
+        }));
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch address:", err);
+      if (err.code === 1) {
+        setError("Location permission denied. Please allow location access in your browser settings.");
+      } else if (err.code === 3) {
+        setError("Location request timed out. Please try again or enter address manually.");
+      } else {
+        setError("Could not get your location. Please ensure GPS is enabled and you have a stable connection.");
+      }
+    } finally {
+      setFetchingAddress(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -388,7 +424,18 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
 
               {/* Location Details */}
               <div className="space-y-6">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Location Details *</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Location Details *</h3>
+                  <button
+                    type="button"
+                    onClick={handleFetchAddress}
+                    disabled={fetchingAddress}
+                    className="flex items-center gap-2 rounded-xl bg-brand/10 px-4 py-2 text-sm font-bold text-brand transition-all hover:bg-brand/20 disabled:opacity-50"
+                  >
+                    {fetchingAddress ? <Loader2 size={16} className="animate-spin" /> : <Navigation size={16} />}
+                    Fetch Current Address
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-3">
                     <label className="text-xs font-bold uppercase text-[var(--text-secondary)]">Locality</label>
