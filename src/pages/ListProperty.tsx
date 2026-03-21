@@ -58,6 +58,8 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
   const { user } = useAuth();
   const [stage, setStage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +98,16 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [fetchingAddress, setFetchingAddress] = useState(false);
+
+  // Auto-generate description
+  useEffect(() => {
+    if (!isEditMode && formData.description.length < 10) {
+      setFormData(prev => ({
+        ...prev,
+        description: generateDefaultDescription()
+      }));
+    }
+  }, [formData.bhkType, formData.type, formData.locality, formData.city, formData.furnishing, formData.category]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -264,6 +276,7 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
     }
 
     setLoading(true);
+    setUploadProgress(10);
     setError(null);
     try {
       const beds = parseInt(formData.bhkType) || 1;
@@ -281,12 +294,14 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
         images: existingImages, // Keep existing images
       };
 
+      setUploadProgress(30);
       if (isEditMode && propertyId) {
         await api.updateProperty(propertyId, finalData as any, images);
       } else {
         await api.createProperty(finalData as any, images);
       }
-      navigate(isEditMode ? '/dashboard' : `/owner-properties/${user.id}`);
+      setUploadProgress(100);
+      setIsSuccess(true);
     } catch (err: any) {
       console.error("Failed to list property:", err);
       let message = "Failed to list property. ";
@@ -334,6 +349,32 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
     );
   }
 
+  if (isSuccess) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-green-500 text-white shadow-xl shadow-green-500/20"
+        >
+          <CheckCircle2 size={48} />
+        </motion.div>
+        <h2 className="text-3xl font-bold text-[var(--text-primary)] md:text-4xl">Successfully Listed!</h2>
+        <p className="mt-4 max-w-md text-lg text-[var(--text-secondary)]">
+          Your property has been successfully {isEditMode ? 'updated' : 'listed'}. It is now visible to thousands of potential seekers.
+        </p>
+        <div className="mt-10">
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="rounded-2xl bg-brand px-10 py-4 font-bold text-black transition-transform hover:scale-105 active:scale-95"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-6 md:py-12">
       <div className="mb-12 text-center">
@@ -345,28 +386,46 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
         </p>
       </div>
 
-      {/* Progress Bar */}
-      <div className="mb-12 flex items-center justify-between px-4">
-        {[1, 2, 3].map((num) => (
-          <React.Fragment key={num}>
-            <div className="flex flex-col items-center gap-2">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
-                stage >= num ? 'border-brand bg-brand text-black' : 'border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)]'
-              }`}>
-                {stage > num ? <CheckCircle2 size={20} /> : num}
+      {/* Progress Bar - Sticky on Mobile */}
+      <div className="sticky top-0 z-50 -mx-4 mb-12 bg-[var(--bg)] px-4 py-4 shadow-md md:static md:mx-0 md:bg-transparent md:p-0 md:shadow-none">
+        <div className="flex items-center justify-between px-4">
+          {[1, 2, 3].map((num) => (
+            <React.Fragment key={num}>
+              <div className="flex flex-col items-center gap-2">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
+                  stage >= num ? 'border-brand bg-brand text-black' : 'border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)]'
+                }`}>
+                  {stage > num ? <CheckCircle2 size={20} /> : num}
+                </div>
+                <span className={`text-[10px] font-medium sm:text-xs ${stage >= num ? 'text-brand' : 'text-[var(--text-secondary)]'}`}>
+                  {num === 1 ? 'Preliminary' : num === 2 ? 'Specs' : 'Final'}
+                </span>
               </div>
-              <span className={`text-[10px] font-medium sm:text-xs ${stage >= num ? 'text-brand' : 'text-[var(--text-secondary)]'}`}>
-                {num === 1 ? 'Preliminary' : num === 2 ? 'Specifications' : 'Final Details'}
-              </span>
-            </div>
-            {num < 3 && (
-              <div className={`h-0.5 flex-1 mx-4 transition-all ${stage > num ? 'bg-brand' : 'bg-[var(--border)]'}`} />
-            )}
-          </React.Fragment>
-        ))}
+              {num < 3 && (
+                <div className={`h-0.5 flex-1 mx-4 transition-all ${stage > num ? 'bg-brand' : 'bg-[var(--border)]'}`} />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
-      <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-8 md:p-12">
+      <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-6 md:p-12">
+        {loading && (
+          <div className="mb-8 space-y-2">
+            <div className="flex justify-between text-sm font-bold">
+              <span>Uploading Property...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+              <motion.div 
+                className="h-full bg-brand"
+                initial={{ width: 0 }}
+                animate={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="mb-8 flex items-center gap-3 rounded-2xl bg-red-500/10 p-4 text-red-500">
             <Info size={20} />
@@ -610,10 +669,9 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
               <div className="flex justify-end">
                 <button 
                   onClick={nextStage}
-                  className="flex items-center gap-2 rounded-2xl bg-brand px-10 py-4 font-bold text-black transition-transform hover:scale-105"
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-brand text-black shadow-lg shadow-brand/20 transition-transform hover:scale-110 active:scale-95"
                 >
-                  Next Stage
-                  <ChevronRight size={20} />
+                  <ChevronRight size={28} />
                 </button>
               </div>
             </motion.div>
@@ -627,64 +685,64 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-8"
             >
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                <div className="space-y-3">
-                  <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Built-up Area (sq ft) *</label>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Built-up Area (sq ft) *</label>
                   <div className="relative">
-                    <Maximize className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={20} />
+                    <Maximize className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
                     <input 
                       type="number" 
                       name="sqft"
                       value={formData.sqft}
                       onChange={handleInputChange}
-                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-4 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-3 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Bathrooms *</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Bathrooms *</label>
                   <div className="relative">
-                    <Bath className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={20} />
+                    <Bath className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
                     <input 
                       type="number" 
                       name="bathrooms"
                       value={formData.bathrooms}
                       onChange={handleInputChange}
-                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-4 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-3 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Floor Number *</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Floor Number *</label>
                   <input 
                     type="number" 
                     name="floorNumber"
                     value={formData.floorNumber}
                     onChange={handleInputChange}
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Total Floors in Building</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Total Floors</label>
                   <input 
                     type="number" 
                     name="totalFloors"
                     value={formData.totalFloors}
                     onChange={handleInputChange}
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Preferred Tenant *</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Preferred Tenant *</label>
                   <select 
                     name="preferredTenant"
                     value={formData.preferredTenant}
                     onChange={handleInputChange}
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                   >
                     {['Family only', 'Bachelor', 'Office Only', 'Anyone'].map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -692,16 +750,16 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
                   </select>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Available From *</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Available From *</label>
                   <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={20} />
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
                     <input 
                       type="date" 
                       name="availableFrom"
                       value={formData.availableFrom}
                       onChange={handleInputChange}
-                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-4 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-3 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                     />
                   </div>
                 </div>
@@ -710,17 +768,15 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
               <div className="flex justify-between">
                 <button 
                   onClick={prevStage}
-                  className="flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-10 py-4 font-bold text-[var(--text-primary)] transition-transform hover:scale-105"
+                  className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] shadow-lg transition-transform hover:scale-110 active:scale-95"
                 >
-                  <ChevronLeft size={20} />
-                  Back
+                  <ChevronLeft size={28} />
                 </button>
                 <button 
                   onClick={nextStage}
-                  className="flex items-center gap-2 rounded-2xl bg-brand px-10 py-4 font-bold text-black transition-transform hover:scale-105"
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-brand text-black shadow-lg shadow-brand/20 transition-transform hover:scale-110 active:scale-95"
                 >
-                  Next Stage
-                  <ChevronRight size={20} />
+                  <ChevronRight size={28} />
                 </button>
               </div>
             </motion.div>
@@ -844,15 +900,14 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
               <div className="flex justify-between">
                 <button 
                   onClick={prevStage}
-                  className="flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-10 py-4 font-bold text-[var(--text-primary)] transition-transform hover:scale-105"
+                  className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] shadow-lg transition-transform hover:scale-110 active:scale-95"
                 >
-                  <ChevronLeft size={20} />
-                  Back
+                  <ChevronLeft size={28} />
                 </button>
                 <button 
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-2xl bg-brand px-12 py-4 font-bold text-black transition-transform hover:scale-105 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-2xl bg-brand px-12 py-4 font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
                   {isEditMode ? 'Update Property' : 'List Property'}

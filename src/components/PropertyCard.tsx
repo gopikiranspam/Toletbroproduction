@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bed, Bath, Maximize, MapPin, Heart } from 'lucide-react';
 import { Property } from '../types';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase';
+import { api } from '../services/api';
 
 interface PropertyCardProps {
   property: Property;
@@ -10,6 +12,30 @@ interface PropertyCardProps {
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const navigate = useNavigate();
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (auth.currentUser) {
+        const user = await api.getOwnerById(auth.currentUser.uid);
+        if (user?.favorites?.includes(property.id)) {
+          setIsFavorite(true);
+        }
+      }
+    };
+    checkFavorite();
+  }, [property.id]);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!auth.currentUser) {
+      alert('Please login to favorite properties');
+      return;
+    }
+
+    const newStatus = await api.toggleFavorite(auth.currentUser.uid, property.id);
+    setIsFavorite(newStatus);
+  };
 
   const handleClick = () => {
     const slug = property.slug || property.title
@@ -45,12 +71,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           )}
         </div>
         <button 
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="absolute top-3 right-3 rounded-full bg-black/40 p-1.5 text-white backdrop-blur-md transition-colors hover:text-brand"
+          onClick={handleToggleFavorite}
+          className={`absolute top-3 right-3 rounded-full bg-black/40 p-1.5 backdrop-blur-md transition-colors hover:text-brand ${isFavorite ? 'text-brand' : 'text-white'}`}
         >
-          <Heart size={14} />
+          <Heart size={14} fill={isFavorite ? "currentColor" : "none"} />
         </button>
         <div className="absolute bottom-3 right-3">
           <div className="rounded-lg bg-brand px-3 py-1 text-sm font-bold text-black shadow-lg">

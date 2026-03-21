@@ -34,11 +34,20 @@ export const Dashboard: React.FC = () => {
     propertyId: null
   });
 
+  const [qrModal, setQrModal] = useState<{ isOpen: boolean; property: Property | null }>({
+    isOpen: false,
+    property: null
+  });
+
   useEffect(() => {
     if (user?.id) {
       loadProperties();
     }
   }, [user]);
+
+  const handleQrClick = (property: Property) => {
+    setQrModal({ isOpen: true, property });
+  };
 
   const loadProperties = async () => {
     if (!user?.id) return;
@@ -222,6 +231,13 @@ export const Dashboard: React.FC = () => {
                         View
                       </button>
                       <button 
+                        onClick={() => handleQrClick(property)}
+                        className="flex h-9 items-center justify-center gap-2 rounded-xl bg-[var(--bg)] px-4 text-[10px] font-bold text-[var(--text-primary)] transition-colors hover:bg-brand hover:text-black"
+                      >
+                        <QrCode size={14} />
+                        QR
+                      </button>
+                      <button 
                         onClick={() => navigate(`/list-property?edit=${property.id}`)}
                         className="flex h-9 items-center justify-center gap-2 rounded-xl bg-[var(--bg)] px-4 text-[10px] font-bold text-[var(--text-primary)] transition-colors hover:bg-brand hover:text-black"
                       >
@@ -313,6 +329,61 @@ export const Dashboard: React.FC = () => {
                   className="py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 >
                   Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* QR Code Modal */}
+      <AnimatePresence>
+        {qrModal.isOpen && qrModal.property && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setQrModal({ isOpen: false, property: null })}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-md rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-8 shadow-2xl text-center"
+            >
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-brand mx-auto">
+                <QrCode size={32} />
+              </div>
+              <h3 className="mb-2 text-2xl font-bold text-[var(--text-primary)]">Property QR Code</h3>
+              <p className="mb-6 text-sm text-[var(--text-secondary)]">
+                Scan this code to view the property details directly.
+              </p>
+              
+              <div className="mx-auto mb-8 flex h-48 w-48 items-center justify-center rounded-3xl bg-white p-4 shadow-inner">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/property/${qrModal.property.slug}-${qrModal.property.id}?source=qr`)}`}
+                  alt="Property QR Code"
+                  className="h-full w-full"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/property/${qrModal.property?.slug}-${qrModal.property?.id}?source=qr`;
+                    navigator.clipboard.writeText(url);
+                    // Could add a toast here
+                  }}
+                  className="rounded-2xl bg-brand py-4 text-sm font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-[1.02]"
+                >
+                  Copy QR Link
+                </button>
+                <button
+                  onClick={() => setQrModal({ isOpen: false, property: null })}
+                  className="py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                >
+                  Close
                 </button>
               </div>
             </motion.div>

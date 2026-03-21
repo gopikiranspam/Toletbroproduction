@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
+import { auth } from '../firebase';
 import { Property, Owner } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -24,15 +25,15 @@ import {
 
 export const PropertyDetailsPage: React.FC = () => {
   const { propertySlugId } = useParams<{ propertySlugId: string }>();
+  const [searchParams] = useSearchParams();
   const [property, setProperty] = useState<Property | null>(null);
   const [owner, setOwner] = useState<Owner | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     if (propertySlugId) {
-      // Extract ID from slug-id format
-      // The ID starts with 'prop-' and continues to the end
       const idMatch = propertySlugId.match(/(prop-.*)$/);
       const id = idMatch ? idMatch[1] : propertySlugId;
       
@@ -42,8 +43,25 @@ export const PropertyDetailsPage: React.FC = () => {
           const p = await api.getPropertyById(id);
           if (p) {
             setProperty(p);
+            
+            // Record view
+            api.incrementPropertyStat(id, 'views');
+            
+            // Record scan if source is QR
+            if (searchParams.get('source') === 'qr') {
+              api.incrementPropertyStat(id, 'scans');
+            }
+
             const o = await api.getOwnerById(p.ownerId);
             if (o) setOwner(o);
+
+            // Check if favorite
+            if (auth.currentUser) {
+              const user = await api.getOwnerById(auth.currentUser.uid);
+              if (user?.favorites?.includes(id)) {
+                setIsFavorite(true);
+              }
+            }
           }
         } catch (error) {
           console.error("Error fetching property details:", error);
@@ -53,7 +71,46 @@ export const PropertyDetailsPage: React.FC = () => {
       };
       fetchData();
     }
-  }, [propertySlugId]);
+  }, [propertySlugId, searchParams]);
+
+  const handleShare = async () => {
+    if (!property) return;
+    
+    const shareData = {
+      title: property.title,
+      text: `Check out this property: ${property.title}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        api.incrementPropertyStat(property.id, 'shares');
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+        api.incrementPropertyStat(property.id, 'shares');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!property) return;
+    if (!auth.currentUser) {
+      alert('Please login to favorite properties');
+      return;
+    }
+
+    const newStatus = await api.toggleFavorite(auth.currentUser.uid, property.id);
+    setIsFavorite(newStatus);
+  };
+
+  const handleContactClick = (type: 'call' | 'message') => {
+    if (!property) return;
+    api.incrementPropertyStat(property.id, type === 'call' ? 'callClicks' : 'messageClicks');
+  };
 
   if (loading) return (
     <div className="flex h-screen flex-col items-center justify-center gap-4">
@@ -131,11 +188,17 @@ export const PropertyDetailsPage: React.FC = () => {
             </div>
 
             <div className="absolute top-6 right-6 flex gap-3">
-              <button className="rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20">
+              <button 
+                onClick={handleShare}
+                className="rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              >
                 <Share2 size={20} />
               </button>
-              <button className="rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20">
-                <Heart size={20} />
+              <button 
+                onClick={handleToggleFavorite}
+                className={`rounded-full bg-black/50 p-3 backdrop-blur-md transition-colors hover:bg-white/20 ${isFavorite ? 'text-brand' : 'text-white'}`}
+              >
+                <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
               </button>
             </div>
           </motion.div>
@@ -335,6 +398,7 @@ export const PropertyDetailsPage: React.FC = () => {
               <div className="mb-8 space-y-4">
                 <a 
                   href={`tel:${owner?.phone || ''}`}
+                  onClick={() => handleContactClick('call')}
                   className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-4 font-bold text-black transition-transform hover:scale-[1.02]"
                 >
                   <Phone size={20} />
@@ -344,6 +408,7 @@ export const PropertyDetailsPage: React.FC = () => {
                   href={`https://wa.me/${owner?.phone?.replace(/\D/g, '') || ''}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => handleContactClick('message')}
                   className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform hover:scale-[1.02]"
                 >
                   <MessageSquare size={20} />

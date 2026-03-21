@@ -337,6 +337,8 @@ export const api = {
     const path = `properties/${id}`;
     try {
       const docRef = doc(db, 'properties', id);
+      // Use a simple update with increment if possible, but Firestore increment is better
+      // For now, let's just use the current logic but make it more reliable
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const currentVal = docSnap.data()[stat] || 0;
@@ -344,6 +346,46 @@ export const api = {
       }
     } catch (error) {
       console.error(`Failed to increment ${stat}:`, error);
+    }
+  },
+
+  toggleFavorite: async (userId: string, propertyId: string): Promise<boolean> => {
+    const userPath = `users/${userId}`;
+    const propPath = `properties/${propertyId}`;
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      const propRef = doc(db, 'properties', propertyId);
+      const propSnap = await getDoc(propRef);
+
+      if (!userSnap.exists()) return false;
+
+      const userData = userSnap.data();
+      const favorites = userData.favorites || [];
+      const isFavorite = favorites.includes(propertyId);
+
+      let newFavorites;
+      let favoriteChange = 0;
+
+      if (isFavorite) {
+        newFavorites = favorites.filter((id: string) => id !== propertyId);
+        favoriteChange = -1;
+      } else {
+        newFavorites = [...favorites, propertyId];
+        favoriteChange = 1;
+      }
+
+      await updateDoc(userRef, { favorites: newFavorites });
+
+      if (propSnap.exists()) {
+        const currentCount = propSnap.data().favoritesCount || 0;
+        await updateDoc(propRef, { favoritesCount: Math.max(0, currentCount + favoriteChange) });
+      }
+
+      return !isFavorite;
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+      return false;
     }
   }
 };
