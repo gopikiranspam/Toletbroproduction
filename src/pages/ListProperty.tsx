@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, 
@@ -54,9 +54,12 @@ interface ListPropertyProps {
 
 export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [stage, setStage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [propertyId, setPropertyId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -91,7 +94,64 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
 
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [fetchingAddress, setFetchingAddress] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const editId = params.get('edit');
+    if (editId) {
+      setIsEditMode(true);
+      setPropertyId(editId);
+      fetchPropertyData(editId);
+    }
+  }, [location.search]);
+
+  const fetchPropertyData = async (id: string) => {
+    setLoading(true);
+    try {
+      const property = await api.getPropertyById(id);
+      if (property) {
+        // Map property data to formData
+        setFormData({
+          category: property.category,
+          bhkType: property.bhkType,
+          type: property.type,
+          furnishing: property.furnishing,
+          locality: property.location.split(',')[0].trim(),
+          city: property.location.split(',')[1]?.trim() || '',
+          state: property.state || 'Maharashtra',
+          pincode: property.pincode || '',
+          fullAddress: property.fullAddress || '',
+          rent: property.category === 'Rent' ? property.price : 0,
+          deposit: property.deposit || 0,
+          maintenance: property.maintenance || 0,
+          expectedPrice: property.category === 'Sale' ? property.price : 0,
+          priceNegotiable: property.priceNegotiable || false,
+          loanAvailable: property.loanAvailable || false,
+          sqft: property.sqft,
+          floorNumber: property.floorNumber || 0,
+          totalFloors: property.totalFloors || 0,
+          bathrooms: property.baths,
+          preferredTenant: property.preferredTenant || 'Anyone',
+          availableFrom: property.availableFrom || new Date().toISOString().split('T')[0],
+          amenities: property.amenities || [],
+          nearbyFacilities: property.nearbyFacilities || [],
+          userType: property.userType || 'Owner',
+          description: property.description,
+          lat: property.lat,
+          lng: property.lng,
+        });
+        setExistingImages(property.images || []);
+        setPreviews(property.images || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch property for editing:", err);
+      setError("Failed to load property data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFetchAddress = async () => {
     setFetchingAddress(true);
@@ -144,7 +204,12 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
   };
 
   const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+    if (index < existingImages.length) {
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      const newIndex = index - existingImages.length;
+      setImages(prev => prev.filter((_, i) => i !== newIndex));
+    }
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -213,10 +278,15 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
         baths: formData.bathrooms,
         features: [...formData.amenities, ...formData.nearbyFacilities],
         ownerId: user.id,
+        images: existingImages, // Keep existing images
       };
 
-      await api.createProperty(finalData as any, images);
-      navigate(`/owner-properties/${user.id}`);
+      if (isEditMode && propertyId) {
+        await api.updateProperty(propertyId, finalData as any, images);
+      } else {
+        await api.createProperty(finalData as any, images);
+      }
+      navigate(isEditMode ? '/dashboard' : `/owner-properties/${user.id}`);
     } catch (err: any) {
       console.error("Failed to list property:", err);
       let message = "Failed to list property. ";
@@ -267,8 +337,12 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-6 md:py-12">
       <div className="mb-12 text-center">
-        <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">List Your Property</h1>
-        <p className="mt-4 text-[var(--text-secondary)]">Reach thousands of potential tenants and buyers instantly.</p>
+        <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">
+          {isEditMode ? 'Edit Property' : 'List Your Property'}
+        </h1>
+        <p className="mt-4 text-[var(--text-secondary)]">
+          {isEditMode ? 'Update your property details to keep them accurate.' : 'Reach thousands of potential tenants and buyers instantly.'}
+        </p>
       </div>
 
       {/* Progress Bar */}
@@ -520,7 +594,7 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-5">
                     {previews.map((preview, index) => (
                       <div key={index} className="group relative aspect-square overflow-hidden rounded-2xl border border-[var(--border)]">
-                        <img src={preview} alt="" className="h-full w-full object-cover" />
+                        <img src={preview || null} alt="" className="h-full w-full object-cover" />
                         <button 
                           onClick={() => removeImage(index)}
                           className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
@@ -781,7 +855,7 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
                   className="flex items-center gap-2 rounded-2xl bg-brand px-12 py-4 font-bold text-black transition-transform hover:scale-105 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
-                  List Property
+                  {isEditMode ? 'Update Property' : 'List Property'}
                 </button>
               </div>
             </motion.div>

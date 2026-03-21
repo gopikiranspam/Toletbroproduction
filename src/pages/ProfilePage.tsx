@@ -243,7 +243,7 @@ export const ProfilePage: React.FC = () => {
                   >
                     <div className="flex gap-4 p-4">
                       <img 
-                        src={property.imageUrl} 
+                        src={property.imageUrl || null} 
                         alt={property.title}
                         className="h-24 w-24 rounded-2xl object-cover"
                       />

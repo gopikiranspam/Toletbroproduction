@@ -29,7 +29,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     >
       <div className="relative aspect-[16/10] overflow-hidden">
         <img 
-          src={property.imageUrl} 
+          src={property.imageUrl || null} 
           alt={property.title}
           referrerPolicy="no-referrer"
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"

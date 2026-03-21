@@ -34,6 +34,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
           <div className="hidden items-center gap-8 md:flex">
             <Link to="/search/rent" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Rent</Link>
             <Link to="/search/buy" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Buy</Link>
+            {user?.role === 'OWNER' && (
+              <Link to="/dashboard" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Dashboard</Link>
+            )}
             {user?.role === 'OWNER' ? (
               <Link to="/dashboard/qr" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Smart Tolet Board</Link>
             ) : (
@@ -50,9 +53,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
             {/* List My Property Button - Visible to everyone */}
             <button 
               onClick={handleListPropertyClick}
-              className="flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-black transition-transform hover:scale-105 active:scale-95"
+              className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black shadow-sm transition-transform hover:scale-105 active:scale-95 border border-[var(--border)]"
             >
-              <Plus size={16} />
+              <Plus size={16} className="text-brand" />
               <span className="hidden sm:inline">List Property</span>
               <span className="sm:hidden">List</span>
             </button>

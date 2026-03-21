@@ -30,6 +30,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { ScannerPage } from './pages/ScannerPage';
 import { QRResolverPage } from './pages/QRResolverPage';
 import { ListProperty } from './pages/ListProperty';
+import { Dashboard } from './pages/Dashboard';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -40,6 +41,14 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [viewAllNearby, setViewAllNearby] = useState(false);
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.role === 'OWNER') {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -274,6 +283,7 @@ const AppContent = () => {
         <Route path="/property/:propertySlugId" element={<PropertyDetailsPage />} />
         <Route path="/search/:city" element={<SearchPage />} />
         <Route path="/search/:city/:area" element={<SearchPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/qr" element={<OwnerQRDashboard />} />
         <Route path="/admin/qr" element={<AdminQRPanel onOpenAuth={() => openAuth('ADMIN')} />} />
         <Route path="/scan" element={<ScannerPage />} />

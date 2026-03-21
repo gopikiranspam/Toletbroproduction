@@ -96,7 +96,7 @@ export const PropertyDetailsPage: React.FC = () => {
             <AnimatePresence mode="wait">
               <motion.img 
                 key={currentImageIndex}
-                src={allImages[currentImageIndex]} 
+                src={allImages[currentImageIndex] || null} 
                 alt={`${property.title} - ${currentImageIndex + 1}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -151,7 +151,7 @@ export const PropertyDetailsPage: React.FC = () => {
                     currentImageIndex === idx ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={img || null} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
             </div>

@@ -69,46 +69,48 @@ export const SearchSection: React.FC<SearchSectionProps> = ({ onNearbySearch, is
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onNearbySearch}
-                disabled={isNearbyLoading}
-                className="flex h-12 items-center gap-2 rounded-2xl bg-brand/10 px-4 text-xs font-bold text-brand transition-all hover:bg-brand/20 disabled:opacity-50"
-              >
-                {isNearbyLoading ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-                ) : (
-                  <MapPin size={16} />
-                )}
-                <span className="hidden sm:inline">Nearby</span>
-              </button>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onNearbySearch}
+                  disabled={isNearbyLoading}
+                  className="flex flex-1 md:flex-none h-12 md:h-12 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 rounded-2xl bg-brand/10 px-2 md:px-4 text-[10px] md:text-xs font-bold text-brand transition-all hover:bg-brand/20 disabled:opacity-50"
+                >
+                  {isNearbyLoading ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                  ) : (
+                    <MapPin size={16} />
+                  )}
+                  <span className="md:inline">Nearby</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => navigate('/scan')}
-                className="flex h-12 items-center gap-2 rounded-2xl bg-[var(--bg)] px-4 text-xs font-bold text-[var(--text-primary)] transition-all hover:bg-[var(--border)]"
-              >
-                <QrCode size={16} />
-                <span className="hidden sm:inline">Scan QR</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/scan')}
+                  className="flex flex-1 md:flex-none h-12 md:h-12 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 rounded-2xl bg-[var(--bg)] px-2 md:px-4 text-[10px] md:text-xs font-bold text-[var(--text-primary)] transition-all hover:bg-[var(--border)]"
+                >
+                  <QrCode size={16} />
+                  <span className="md:inline">Scan</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex h-12 items-center gap-2 rounded-2xl px-4 text-xs font-bold transition-all ${
-                  showFilters 
-                    ? 'bg-brand text-black' 
-                    : 'bg-[var(--bg)] text-[var(--text-primary)] hover:bg-[var(--border)]'
-                }`}
-              >
-                <SlidersHorizontal size={16} />
-                <span className="hidden sm:inline">Filters</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex flex-1 md:flex-none h-12 md:h-12 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 rounded-2xl px-2 md:px-4 text-[10px] md:text-xs font-bold transition-all ${
+                    showFilters 
+                      ? 'bg-brand text-black' 
+                      : 'bg-[var(--bg)] text-[var(--text-primary)] hover:bg-[var(--border)]'
+                  }`}
+                >
+                  <SlidersHorizontal size={16} />
+                  <span className="md:inline">Filter</span>
+                </button>
+              </div>
 
               <button
                 type="submit"
-                className="flex h-12 items-center justify-center rounded-2xl bg-brand px-8 text-xs font-bold text-black shadow-lg shadow-brand/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="flex h-12 w-full md:w-auto items-center justify-center rounded-2xl bg-brand px-8 text-xs font-bold text-black shadow-lg shadow-brand/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Search
               </button>

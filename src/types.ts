@@ -58,6 +58,16 @@ export interface Property {
   lat?: number;
   lng?: number;
   
+  // Dashboard & Stats
+  isOccupied?: boolean;
+  isDeleted?: boolean;
+  scans?: number;
+  views?: number;
+  favoritesCount?: number;
+  shares?: number;
+  callClicks?: number;
+  messageClicks?: number;
+  
   createdAt: string;
 }
 
