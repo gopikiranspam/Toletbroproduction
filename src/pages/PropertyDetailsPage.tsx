@@ -25,6 +25,8 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
+import { isDNDActive } from '../utils/privacy';
+
 export const PropertyDetailsPage: React.FC = () => {
   const { propertySlugId } = useParams<{ propertySlugId: string }>();
   const [searchParams] = useSearchParams();
@@ -33,8 +35,11 @@ export const PropertyDetailsPage: React.FC = () => {
   const [owner, setOwner] = useState<Owner | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   
   const isFavorite = property ? user?.favorites?.includes(property.id) : false;
+
+  const dndActive = isDNDActive(owner?.privacy);
 
   useEffect(() => {
     if (propertySlugId) {
@@ -391,24 +396,85 @@ export const PropertyDetailsPage: React.FC = () => {
               </div>
 
               <div className="mb-8 space-y-4">
-                <a 
-                  href={`tel:${owner?.phone || ''}`}
-                  onClick={() => handleContactClick('call')}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-4 font-bold text-black transition-transform hover:scale-[1.02]"
-                >
-                  <Phone size={20} />
-                  <span>Call Owner</span>
-                </a>
-                <a 
-                  href={`https://wa.me/${owner?.phone?.replace(/\D/g, '') || ''}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => handleContactClick('message')}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform hover:scale-[1.02]"
-                >
-                  <MessageSquare size={20} />
-                  <span>Chat on WhatsApp</span>
-                </a>
+                {owner?.privacy?.preDisclosure?.enabled && !disclosureAccepted ? (
+                  <div className="rounded-2xl border border-brand/20 bg-brand/5 p-6">
+                    <div className="mb-4 flex items-start gap-3 text-sm text-brand">
+                      <Info size={18} className="shrink-0 mt-0.5" />
+                      <p className="font-medium leading-relaxed">
+                        {owner.privacy.preDisclosure.message || "Serious tenants only, Please contact me only when you agree below terms & conditions"}
+                      </p>
+                    </div>
+                    
+                    {owner.privacy.preDisclosure.options && owner.privacy.preDisclosure.options.length > 0 && (
+                      <div className="mb-6 space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Owner Preferences</p>
+                        <div className="flex flex-wrap gap-2">
+                          {owner.privacy.preDisclosure.options.map((opt: string) => (
+                            <span key={opt} className="rounded-lg bg-white/5 px-3 py-1.5 text-[10px] font-medium text-white/60 border border-white/10">
+                              {opt}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <button 
+                      onClick={() => setDisclosureAccepted(true)}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-black transition-transform hover:scale-[1.02]"
+                    >
+                      <CheckCircle2 size={18} />
+                      <span>Accept & View Contact</span>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {dndActive ? (
+                      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+                          <Calendar size={24} />
+                        </div>
+                        <h4 className="mb-1 font-bold text-red-500">Owner is Busy</h4>
+                        <p className="text-xs text-white/60">
+                          Reason: <span className="font-bold text-white/80">{owner?.privacy?.doNotDisturb?.reason}</span>
+                        </p>
+                        <p className="mt-2 text-[10px] text-white/40 italic">
+                          Please try again after {owner?.privacy?.doNotDisturb?.endTime}
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {!owner?.privacy?.onlyMessage && (
+                          <a 
+                            href={`tel:${owner?.phone || ''}`}
+                            onClick={() => handleContactClick('call')}
+                            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-4 font-bold text-black transition-transform hover:scale-[1.02]"
+                          >
+                            <Phone size={20} />
+                            <span>Call Owner</span>
+                          </a>
+                        )}
+                        
+                        {owner?.privacy?.onlyMessage && (
+                          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-xs text-indigo-400 flex gap-3 items-start">
+                            <Info size={16} className="shrink-0 mt-0.5" />
+                            <p>Owner not accepting the calls this time, please make whatsapp message.</p>
+                          </div>
+                        )}
+
+                        <a 
+                          href={`https://wa.me/${owner?.phone?.replace(/\D/g, '') || ''}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => handleContactClick('message')}
+                          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform hover:scale-[1.02]"
+                        >
+                          <MessageSquare size={20} />
+                          <span>Chat on WhatsApp</span>
+                        </a>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
 
               {owner && (

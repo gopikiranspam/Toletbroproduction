@@ -26,6 +26,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
+import { PrivacyControls } from '../components/PrivacyControls';
+
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -106,6 +108,12 @@ export const ProfilePage: React.FC = () => {
         label: 'Smart Tolet Board',
         icon: QrCode,
         onClick: () => navigate('/dashboard/qr'),
+      },
+      {
+        id: 'privacy',
+        label: 'Privacy Settings',
+        icon: ShieldCheck,
+        onClick: () => navigate('/privacy-controls'),
       }
     ] : []),
     {
@@ -210,7 +218,7 @@ export const ProfilePage: React.FC = () => {
               </motion.button>
             </div>
           </motion.div>
-        ) : (
+        ) : view === 'properties' ? (
           <motion.div
             key="properties"
             initial={{ opacity: 0, x: 20 }}
@@ -226,7 +234,6 @@ export const ProfilePage: React.FC = () => {
               </button>
               <h2 className="text-2xl font-bold text-[var(--text-primary)]">My Properties</h2>
             </div>
-
             <div className="space-y-4">
               {loadingProps ? (
                 <div className="flex justify-center py-20">
@@ -277,7 +284,7 @@ export const ProfilePage: React.FC = () => {
               )}
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
 
       <div className="mt-12 text-center">

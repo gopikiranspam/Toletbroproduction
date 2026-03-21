@@ -13,7 +13,7 @@ import {
   ConfirmationResult
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { User, UserRole } from '../types';
 import { safeLog } from '../utils/logger';
@@ -74,26 +74,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     checkConfig();
 
-    const unsubscribe = onAuthStateChanged(auth, async (fUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (fUser) => {
       setFirebaseUser(fUser);
+      let userUnsubscribe: (() => void) | null = null;
+
       if (fUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', fUser.uid));
-          if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
-          } else {
-            // Do NOT auto-create profile here. 
-            // AuthModal will handle profile completion for new users.
-            setUser(null);
+        // Use onSnapshot for real-time profile updates
+        userUnsubscribe = onSnapshot(
+          doc(db, 'users', fUser.uid),
+          (userDoc) => {
+            if (userDoc.exists()) {
+              setUser(userDoc.data() as User);
+            } else {
+              setUser(null);
+            }
+            setLoading(false);
+            setIsAuthReady(true);
+          },
+          (error) => {
+            safeLog.error('Error listening to user profile:', error);
+            setLoading(false);
+            setIsAuthReady(true);
           }
-        } catch (error) {
-          safeLog.error('Error fetching user profile:', error);
-        }
+        );
       } else {
         setUser(null);
+        setLoading(false);
+        setIsAuthReady(true);
       }
-      setLoading(false);
-      setIsAuthReady(true);
+
+      return () => {
+        if (userUnsubscribe) userUnsubscribe();
+      };
     });
 
     return () => unsubscribe();

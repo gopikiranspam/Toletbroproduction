@@ -79,6 +79,24 @@ export interface User {
   role?: UserRole;
   qrId?: string;
   favorites?: string[];
+  privacy?: PrivacySettings;
+}
+
+export type DNDReason = 'Busy' | 'Out of station' | 'Not available';
+
+export interface PrivacySettings {
+  doNotDisturb: {
+    enabled: boolean;
+    startTime: string;
+    endTime: string;
+    reason: DNDReason;
+  };
+  onlyMessage: boolean;
+  preDisclosure: {
+    enabled: boolean;
+    message: string;
+    options: string[];
+  };
 }
 
 export interface Owner extends User {

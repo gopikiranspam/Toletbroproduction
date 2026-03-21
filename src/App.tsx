@@ -27,6 +27,7 @@ import { SearchPage } from './pages/SearchPage';
 import { OwnerQRDashboard } from './pages/OwnerQRDashboard';
 import { AdminQRPanel } from './pages/AdminQRPanel';
 import { ProfilePage } from './pages/ProfilePage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { ScannerPage } from './pages/ScannerPage';
 import { QRResolverPage } from './pages/QRResolverPage';
 import { ListProperty } from './pages/ListProperty';
@@ -290,12 +291,13 @@ const AppContent = () => {
         <Route path="/admin/qr" element={<AdminQRPanel onOpenAuth={() => openAuth('ADMIN')} />} />
         <Route path="/scan" element={<ScannerPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/privacy-controls" element={<PrivacyPage />} />
         <Route path="/list-property" element={<ListProperty onOpenAuth={() => openAuth('USER')} />} />
       </Routes>
 
       <Footer />
       
-      <MobileTabs user={user} onOpenAuth={() => openAuth('USER')} />
+      <MobileTabs onOpenAuth={() => openAuth('USER')} />
       
       <AnimatePresence>
         {authModal.isOpen && (

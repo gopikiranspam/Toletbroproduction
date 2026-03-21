@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Bed, Bath, Maximize, MapPin, Heart } from 'lucide-react';
-import { Property } from '../types';
+import { Bed, Bath, Maximize, MapPin, Heart, BellOff } from 'lucide-react';
+import { Property, PrivacySettings } from '../types';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
+import { isDNDActive } from '../utils/privacy';
 
 interface PropertyCardProps {
   property: Property;
@@ -12,7 +14,16 @@ interface PropertyCardProps {
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const navigate = useNavigate();
   const { user, openAuth, toggleFavorite } = useAuth();
+  const [privacy, setPrivacy] = useState<PrivacySettings | undefined>();
   const isFavorite = user?.favorites?.includes(property.id) || false;
+
+  useEffect(() => {
+    api.getOwnerById(property.ownerId).then(owner => {
+      if (owner?.privacy) setPrivacy(owner.privacy);
+    });
+  }, [property.ownerId]);
+
+  const dndActive = isDNDActive(privacy);
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,6 +65,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           {property.isFeatured && (
             <span className="rounded-lg bg-brand px-2 py-1 text-[10px] font-bold text-black uppercase tracking-wider">
               Featured
+            </span>
+          )}
+          {dndActive && (
+            <span className="flex items-center gap-1 rounded-lg bg-red-500 px-2 py-1 text-[10px] font-bold text-white uppercase tracking-wider shadow-lg shadow-red-500/20">
+              <BellOff size={10} />
+              DND
             </span>
           )}
         </div>
