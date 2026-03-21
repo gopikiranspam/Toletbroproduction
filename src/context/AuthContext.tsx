@@ -30,6 +30,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUserRole: (role: UserRole) => Promise<void>;
   checkUserExists: (email: string) => Promise<boolean>;
+  authModal: { isOpen: boolean; mode: 'USER' | 'ADMIN' };
+  openAuth: (mode?: 'USER' | 'ADMIN') => void;
+  closeAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +43,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
+  const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'USER' | 'ADMIN' }>({
+    isOpen: false,
+    mode: 'USER'
+  });
   const isRecaptchaInitialized = useRef(false);
 
   useEffect(() => {
@@ -275,6 +282,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const openAuth = (mode: 'USER' | 'ADMIN' = 'USER') => {
+    setAuthModal({ isOpen: true, mode });
+  };
+
+  const closeAuth = () => {
+    setAuthModal(prev => ({ ...prev, isOpen: false }));
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -287,7 +302,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendOtp,
       logout,
       updateUserRole,
-      checkUserExists
+      checkUserExists,
+      authModal,
+      openAuth,
+      closeAuth
     }}>
       {children}
     </AuthContext.Provider>

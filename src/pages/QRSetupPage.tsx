@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 export const QRSetupPage: React.FC = () => {
   const { qrId } = useParams<{ qrId: string }>();
   const navigate = useNavigate();
-  const { user, isAuthReady } = useAuth();
+  const { user, isAuthReady, openAuth, updateUserRole } = useAuth();
   const [qrData, setQrData] = useState<QRCodeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState(false);
@@ -38,7 +38,7 @@ export const QRSetupPage: React.FC = () => {
     }
 
     if (user.role !== 'OWNER') {
-      setError('Only property owners can link boards.');
+      setError('Only property owners can link boards. Would you like to switch to an owner account?');
       return;
     }
 
@@ -49,7 +49,7 @@ export const QRSetupPage: React.FC = () => {
       const success = await api.linkQRToOwner(qrId, user.id);
       if (success) {
         setStep('SUCCESS');
-        setTimeout(() => navigate(`/owner-properties/${user.id}`), 3000);
+        setTimeout(() => navigate('/dashboard/qr'), 3000);
       } else {
         setError('Failed to link QR code. Please try again.');
       }
@@ -121,16 +121,29 @@ export const QRSetupPage: React.FC = () => {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 rounded-xl bg-red-500/10 p-4 text-xs text-red-500">
-                <AlertCircle size={14} className="shrink-0" />
-                <span>{error}</span>
+              <div className="flex flex-col gap-3 rounded-xl bg-red-500/10 p-4 text-xs text-red-500">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+                {user && user.role === 'FINDER' && (
+                  <button
+                    onClick={() => {
+                      updateUserRole('OWNER');
+                      setError('');
+                    }}
+                    className="w-fit rounded-lg bg-red-500 px-3 py-1.5 font-bold text-white transition-transform hover:scale-105"
+                  >
+                    Switch to Owner Account
+                  </button>
+                )}
               </div>
             )}
 
             <div className="space-y-4">
               <button 
-                onClick={handleLink}
-                disabled={linking || !user}
+                onClick={user ? handleLink : () => openAuth('USER')}
+                disabled={linking}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-4 font-bold text-black transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
               >
                 {linking ? (
@@ -138,14 +151,16 @@ export const QRSetupPage: React.FC = () => {
                     <Loader2 size={20} className="animate-spin" />
                     Linking...
                   </>
-                ) : (
+                ) : user ? (
                   'Confirm & Link'
+                ) : (
+                  'Login to Link Board'
                 )}
               </button>
               
               {!user && (
-                <p className="text-center text-xs text-red-400">
-                  Please log in as an owner to continue.
+                <p className="text-center text-xs text-[var(--text-secondary)]">
+                  You need to be logged in as an owner to activate this board.
                 </p>
               )}
 

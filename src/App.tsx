@@ -143,19 +143,7 @@ const HomePage = () => {
 };
 
 const AppContent = () => {
-  const { user } = useAuth();
-  const [authConfig, setAuthConfig] = useState<{ isOpen: boolean; mode: 'USER' | 'ADMIN' }>({
-    isOpen: false,
-    mode: 'USER'
-  });
-
-  const openAuth = (mode: 'USER' | 'ADMIN' = 'USER') => {
-    setAuthConfig({ isOpen: true, mode });
-  };
-
-  const closeAuth = () => {
-    setAuthConfig(prev => ({ ...prev, isOpen: false }));
-  };
+  const { user, authModal, openAuth, closeAuth } = useAuth();
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] selection:bg-brand selection:text-black transition-colors duration-300">
@@ -181,11 +169,11 @@ const AppContent = () => {
       <MobileTabs user={user} onOpenAuth={() => openAuth('USER')} />
       
       <AnimatePresence>
-        {authConfig.isOpen && (
+        {authModal.isOpen && (
           <AuthModal 
-            isOpen={authConfig.isOpen} 
+            isOpen={authModal.isOpen} 
             onClose={closeAuth} 
-            mode={authConfig.mode}
+            mode={authModal.mode}
           />
         )}
       </AnimatePresence>
