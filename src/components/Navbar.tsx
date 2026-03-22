@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, User, Plus, Building2 } from 'lucide-react';
+import { QrCode, User, Plus, Building2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
@@ -26,9 +26,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2 transition-transform hover:scale-105">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-black">
-              <Home size={24} />
+              <QrCode size={24} />
             </div>
-            <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">ToLetBro</span>
+            <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">TOLETBRO</span>
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
@@ -46,20 +46,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Desktop Theme Toggle */}
-            <div className="hidden md:block">
-              <ThemeToggle />
-            </div>
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* Theme Toggle - Always Visible */}
+            <ThemeToggle />
 
-            {/* List My Property Button - Visible to everyone */}
+            {/* List My Property - Text link for mobile, button for desktop */}
             <button 
               onClick={handleListPropertyClick}
-              className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black shadow-sm transition-transform hover:scale-105 active:scale-95 border border-[var(--border)]"
+              className="group relative flex items-center gap-1 px-1 py-1 transition-transform active:scale-95 md:rounded-xl md:bg-white md:px-4 md:py-2 md:shadow-sm md:hover:scale-105 md:border md:border-[var(--border)]"
             >
               <Plus size={16} className="text-brand" />
-              <span className="hidden sm:inline">List Property</span>
-              <span className="sm:hidden">List</span>
+              <span className="text-xs font-bold text-[var(--text-primary)] underline underline-offset-4 decoration-white md:text-black md:no-underline">
+                <span className="md:hidden">List</span>
+                <span className="hidden md:inline">List your property</span>
+              </span>
             </button>
 
             {user ? (
@@ -79,8 +79,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
                 <span>Sign In</span>
               </button>
             )}
-            
-            {/* Burger menu removed as per request for mobile */}
           </div>
         </div>
       </nav>

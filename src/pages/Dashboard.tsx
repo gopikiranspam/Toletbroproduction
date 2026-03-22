@@ -86,14 +86,13 @@ export const Dashboard: React.FC = () => {
 
   const activeProperties = properties.filter(p => p.isActive && !p.isOccupied && !p.isDeleted);
   const totalStats = activeProperties.reduce((acc, p) => ({
-    scans: acc.scans + (p.scans || 0),
-    internalScans: acc.internalScans + (p.internalScans || 0),
+    scans: acc.scans + (p.scans || 0) + (p.internalScans || 0),
     views: acc.views + (p.views || 0),
     favorites: acc.favorites + (p.favoritesCount || 0),
     shares: acc.shares + (p.shares || 0),
     calls: acc.calls + (p.callClicks || 0),
     messages: acc.messages + (p.messageClicks || 0),
-  }), { scans: 0, internalScans: 0, views: 0, favorites: 0, shares: 0, calls: 0, messages: 0 });
+  }), { scans: 0, views: 0, favorites: 0, shares: 0, calls: 0, messages: 0 });
 
   if (loading) {
     return (
@@ -123,40 +122,39 @@ export const Dashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Insights Section */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 text-brand">
-            <TrendingUp size={20} />
-            <h2 className="text-xs font-bold uppercase tracking-widest">Insights & Analytics</h2>
-          </div>
-          
-          {/* Mobile: Single Box, Desktop: Grid */}
-          <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-6 md:bg-transparent md:p-0 md:border-none">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-7">
-              {[
-                { label: 'QR Scans', value: totalStats.scans, icon: QrCode, color: 'text-blue-500' },
-                { label: 'Internal Scans', value: totalStats.internalScans, icon: QrCode, color: 'text-cyan-500' },
-                { label: 'Views', value: totalStats.views, icon: Eye, color: 'text-emerald-500' },
-                { label: 'Favorites', value: totalStats.favorites, icon: Heart, color: 'text-rose-500' },
-                { label: 'Shares', value: totalStats.shares, icon: Share2, color: 'text-amber-500' },
-                { label: 'Calls', value: totalStats.calls, icon: Phone, color: 'text-indigo-500' },
-                { label: 'Messages', value: totalStats.messages, icon: MessageSquare, color: 'text-purple-500' },
-              ].map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex flex-col items-center justify-center rounded-2xl md:rounded-3xl md:border md:border-[var(--border)] md:bg-[var(--card-bg)] p-4 md:p-6 md:shadow-sm"
-                >
-                  <stat.icon className={`mb-2 md:mb-4 ${stat.color}`} size={18} />
-                  <div className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">{stat.value}</div>
-                  <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">{stat.label}</div>
-                </motion.div>
-              ))}
+          {/* Insights Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 text-brand">
+              <TrendingUp size={20} />
+              <h2 className="text-xs font-bold uppercase tracking-widest">Insights & Analytics</h2>
             </div>
-          </div>
-        </section>
+            
+            {/* Mobile: Circular Divisions, Desktop: Grid */}
+            <div className="md:bg-transparent md:p-0">
+              <div className="flex flex-wrap justify-center gap-4 md:grid md:grid-cols-3 lg:grid-cols-6">
+                {[
+                  { label: 'Scans', value: totalStats.scans, icon: QrCode, color: 'text-blue-500' },
+                  { label: 'Views', value: totalStats.views, icon: Eye, color: 'text-emerald-500' },
+                  { label: 'Favorites', value: totalStats.favorites, icon: Heart, color: 'text-rose-500' },
+                  { label: 'Shares', value: totalStats.shares, icon: Share2, color: 'text-amber-500' },
+                  { label: 'Calls', value: totalStats.calls, icon: Phone, color: 'text-indigo-500' },
+                  { label: 'Messages', value: totalStats.messages, icon: MessageSquare, color: 'text-purple-500' },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex h-24 w-24 flex-col items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] p-2 shadow-sm md:h-auto md:w-auto md:rounded-3xl md:p-6"
+                  >
+                    <stat.icon className={`mb-1 md:mb-4 ${stat.color}`} size={16} />
+                    <div className="text-sm md:text-2xl font-bold text-[var(--text-primary)]">{stat.value}</div>
+                    <div className="text-[7px] md:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
 
         {/* Property Management Section */}
         <section className="space-y-6">
@@ -219,11 +217,7 @@ export const Dashboard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1 text-[10px] font-bold text-brand">
                           <QrCode size={12} />
-                          {property.scans || 0}
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-cyan-500">
-                          <QrCode size={12} />
-                          {property.internalScans || 0}
+                          {(property.scans || 0) + (property.internalScans || 0)}
                         </div>
                       </div>
                     </div>
