@@ -58,7 +58,11 @@ export const PropertyDetailsPage: React.FC = () => {
             
             // Record scan if source is QR
             if (searchParams.get('source') === 'qr') {
-              api.incrementPropertyStat(id, 'scans');
+              if (searchParams.get('internal') === 'true') {
+                api.incrementPropertyStat(id, 'internalScans');
+              } else {
+                api.incrementPropertyStat(id, 'scans');
+              }
             }
 
             const o = await api.getOwnerById(p.ownerId);

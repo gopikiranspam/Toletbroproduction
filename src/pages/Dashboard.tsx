@@ -87,12 +87,13 @@ export const Dashboard: React.FC = () => {
   const activeProperties = properties.filter(p => p.isActive && !p.isOccupied && !p.isDeleted);
   const totalStats = activeProperties.reduce((acc, p) => ({
     scans: acc.scans + (p.scans || 0),
+    internalScans: acc.internalScans + (p.internalScans || 0),
     views: acc.views + (p.views || 0),
     favorites: acc.favorites + (p.favoritesCount || 0),
     shares: acc.shares + (p.shares || 0),
     calls: acc.calls + (p.callClicks || 0),
     messages: acc.messages + (p.messageClicks || 0),
-  }), { scans: 0, views: 0, favorites: 0, shares: 0, calls: 0, messages: 0 });
+  }), { scans: 0, internalScans: 0, views: 0, favorites: 0, shares: 0, calls: 0, messages: 0 });
 
   if (loading) {
     return (
@@ -131,9 +132,10 @@ export const Dashboard: React.FC = () => {
           
           {/* Mobile: Single Box, Desktop: Grid */}
           <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-6 md:bg-transparent md:p-0 md:border-none">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-7">
               {[
-                { label: 'Scans', value: totalStats.scans, icon: QrCode, color: 'text-blue-500' },
+                { label: 'QR Scans', value: totalStats.scans, icon: QrCode, color: 'text-blue-500' },
+                { label: 'Internal Scans', value: totalStats.internalScans, icon: QrCode, color: 'text-cyan-500' },
                 { label: 'Views', value: totalStats.views, icon: Eye, color: 'text-emerald-500' },
                 { label: 'Favorites', value: totalStats.favorites, icon: Heart, color: 'text-rose-500' },
                 { label: 'Shares', value: totalStats.shares, icon: Share2, color: 'text-amber-500' },
@@ -218,6 +220,10 @@ export const Dashboard: React.FC = () => {
                         <div className="flex items-center gap-1 text-[10px] font-bold text-brand">
                           <QrCode size={12} />
                           {property.scans || 0}
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-cyan-500">
+                          <QrCode size={12} />
+                          {property.internalScans || 0}
                         </div>
                       </div>
                     </div>

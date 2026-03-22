@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { motion } from 'motion/react';
 import { Loader2, AlertCircle, QrCode } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 export const QRResolverPage: React.FC = () => {
   const { qrId } = useParams<{ qrId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isAuthReady } = useAuth();
   const [status, setStatus] = useState<'loading' | 'error' | 'unlinked'>('loading');
   const [message, setMessage] = useState('');
@@ -16,7 +17,10 @@ export const QRResolverPage: React.FC = () => {
     const resolveQR = async () => {
       if (!qrId || !isAuthReady) return;
 
-      console.log('Resolving QR:', qrId);
+      const isInternal = searchParams.get('internal') === 'true';
+      const sourceQuery = `source=qr${isInternal ? '&internal=true' : ''}`;
+
+      console.log('Resolving QR:', qrId, 'Internal:', isInternal);
       try {
         const qrData = await api.getQRData(qrId);
         console.log('QR Data:', qrData);
@@ -51,10 +55,10 @@ export const QRResolverPage: React.FC = () => {
               .replace(/[^a-z0-9]+/g, '-')
               .replace(/(^-|-$)/g, '');
             setMessage('Redirecting to property details...');
-            navigate(`/property/${slug}-${p.id}`, { replace: true });
+            navigate(`/property/${slug}-${p.id}?${sourceQuery}`, { replace: true });
           } else {
             // Multiple properties or zero, show list
-            navigate(`/owner-properties/${qrData.ownerId}`, { replace: true });
+            navigate(`/owner-properties/${qrData.ownerId}?${sourceQuery}`, { replace: true });
           }
         } else {
           console.log('QR is LINKED but ownerId is missing');

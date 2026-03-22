@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { Property, Owner } from '../types';
 import { PropertyCard } from '../components/PropertyCard';
@@ -9,6 +9,7 @@ import { MapPin, Phone, Mail, Loader2, AlertCircle } from 'lucide-react';
 export const OwnerListingsPage: React.FC = () => {
   const { ownerId } = useParams<{ ownerId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [owner, setOwner] = useState<Owner | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,14 @@ export const OwnerListingsPage: React.FC = () => {
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
-              navigate(`/property/${slug}-${p.id}`);
+              
+              const source = searchParams.get('source');
+              const internal = searchParams.get('internal');
+              let query = '';
+              if (source) query += `?source=${source}`;
+              if (internal) query += `${query ? '&' : '?'}internal=${internal}`;
+              
+              navigate(`/property/${slug}-${p.id}${query}`);
             }
           }
         } catch (error) {
@@ -46,7 +54,7 @@ export const OwnerListingsPage: React.FC = () => {
       };
       fetchData();
     }
-  }, [ownerId, navigate]);
+  }, [ownerId, navigate, searchParams]);
 
   if (loading || (properties.length === 1 && owner)) return (
     <div className="flex h-screen flex-col items-center justify-center gap-4">

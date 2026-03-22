@@ -333,7 +333,7 @@ export const api = {
     }
   },
 
-  incrementPropertyStat: async (id: string, stat: 'scans' | 'views' | 'favoritesCount' | 'shares' | 'callClicks' | 'messageClicks'): Promise<void> => {
+  incrementPropertyStat: async (id: string, stat: 'scans' | 'internalScans' | 'views' | 'favoritesCount' | 'shares' | 'callClicks' | 'messageClicks'): Promise<void> => {
     const path = `properties/${id}`;
     try {
       const docRef = doc(db, 'properties', id);

@@ -62,6 +62,7 @@ export interface Property {
   isOccupied?: boolean;
   isDeleted?: boolean;
   scans?: number;
+  internalScans?: number;
   views?: number;
   favoritesCount?: number;
   shares?: number;

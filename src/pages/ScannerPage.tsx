@@ -24,14 +24,14 @@ export const ScannerPage: React.FC = () => {
       if (pathParts.includes('scan')) {
         const qrId = pathParts[pathParts.indexOf('scan') + 1];
         if (qrId) {
-          navigate(`/scan/${qrId}`);
+          navigate(`/scan/${qrId}?internal=true`);
           return;
         }
       }
       
       // Fallback for raw IDs
       if (decodedText.startsWith('QR-')) {
-        navigate(`/scan/${decodedText}`);
+        navigate(`/scan/${decodedText}?internal=true`);
         return;
       }
 
@@ -39,7 +39,7 @@ export const ScannerPage: React.FC = () => {
     } catch (e) {
       // If it's not a URL, check if it's a raw ID
       if (decodedText.startsWith('QR-')) {
-        navigate(`/scan/${decodedText}`);
+        navigate(`/scan/${decodedText}?internal=true`);
         return;
       }
       setError("Could not recognize QR code format.");

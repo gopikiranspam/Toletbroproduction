@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bed, Bath, Maximize, MapPin, Heart, BellOff } from 'lucide-react';
 import { Property, PrivacySettings } from '../types';
 import { motion } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { isDNDActive } from '../utils/privacy';
@@ -13,6 +13,7 @@ interface PropertyCardProps {
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, openAuth, toggleFavorite } = useAuth();
   const [privacy, setPrivacy] = useState<PrivacySettings | undefined>();
   const isFavorite = user?.favorites?.includes(property.id) || false;
@@ -40,7 +41,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
-    navigate(`/property/${slug}-${property.id}`);
+    
+    const source = searchParams.get('source');
+    const internal = searchParams.get('internal');
+    let query = '';
+    if (source) query += `?source=${source}`;
+    if (internal) query += `${query ? '&' : '?'}internal=${internal}`;
+    
+    navigate(`/property/${slug}-${property.id}${query}`);
   };
 
   return (
