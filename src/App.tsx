@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet, Routes, Route, useNavigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { SearchSection } from './components/SearchSection';
@@ -272,8 +272,8 @@ const HomePage = () => {
   );
 };
 
-const AppContent = () => {
-  const { user, authModal, openAuth, closeAuth } = useAuth();
+const AppLayout = () => {
+  const { authModal, openAuth, closeAuth } = useAuth();
 
   useEffect(() => {
     // Silently request GPS permission on mount
@@ -290,23 +290,7 @@ const AppContent = () => {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] selection:bg-brand selection:text-black transition-colors duration-300">
       <Navbar onOpenAuth={() => openAuth('USER')} />
       
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/scan/:qrId" element={<QRResolverPage />} />
-        <Route path="/link-qr/:qrId" element={<QRSetupPage />} />
-        <Route path="/owner-properties/:ownerId" element={<OwnerListingsPage />} />
-        <Route path="/property/:propertySlugId" element={<PropertyDetailsPage />} />
-        <Route path="/search/:city" element={<SearchPage />} />
-        <Route path="/search/:city/:area" element={<SearchPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/qr" element={<OwnerQRDashboard />} />
-        <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/admin/qr" element={<AdminQRPanel onOpenAuth={() => openAuth('ADMIN')} />} />
-        <Route path="/scan" element={<ScannerPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/privacy-controls" element={<PrivacyPage />} />
-        <Route path="/list-property" element={<ListProperty onOpenAuth={() => openAuth('USER')} />} />
-      </Routes>
+      <Outlet />
 
       <Footer />
       
@@ -328,13 +312,34 @@ const AppContent = () => {
   );
 };
 
+const router = createBrowserRouter([
+  {
+    element: <AppLayout />,
+    children: [
+      { path: "/", element: <HomePage /> },
+      { path: "/scan/:qrId", element: <QRResolverPage /> },
+      { path: "/link-qr/:qrId", element: <QRSetupPage /> },
+      { path: "/owner-properties/:ownerId", element: <OwnerListingsPage /> },
+      { path: "/property/:propertySlugId", element: <PropertyDetailsPage /> },
+      { path: "/search/:city", element: <SearchPage /> },
+      { path: "/search/:city/:area", element: <SearchPage /> },
+      { path: "/dashboard", element: <Dashboard /> },
+      { path: "/dashboard/qr", element: <OwnerQRDashboard /> },
+      { path: "/favorites", element: <FavoritesPage /> },
+      { path: "/admin/qr", element: <AdminQRPanel /> },
+      { path: "/scan", element: <ScannerPage /> },
+      { path: "/profile", element: <ProfilePage /> },
+      { path: "/privacy-controls", element: <PrivacyPage /> },
+      { path: "/list-property", element: <ListProperty /> },
+    ]
+  }
+]);
+
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </AuthProvider>
     </ThemeProvider>
   );

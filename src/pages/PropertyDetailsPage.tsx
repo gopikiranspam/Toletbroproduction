@@ -41,6 +41,8 @@ export const PropertyDetailsPage: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [nearbyProperties, setNearbyProperties] = useState<Property[]>([]);
+  const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
+  const [warningType, setWarningType] = useState<'DND' | 'ONLY_MESSAGE' | 'DISCLOSURE' | null>(null);
   const userLocation = useLocation();
   
   const isFavorite = property ? user?.favorites?.includes(property.id) : false;
@@ -135,8 +137,37 @@ export const PropertyDetailsPage: React.FC = () => {
   };
 
   const handleContactClick = (type: 'call' | 'message') => {
-    if (!property) return;
+    if (!property || !owner) return;
+    
+    // Check for DND - Only block calls if DND is active
+    if (type === 'call' && dndActive) {
+      setWarningType('DND');
+      setShowPrivacyWarning(true);
+      return;
+    }
+
+    // Check for Only Message (if calling)
+    if (type === 'call' && owner.privacy?.onlyMessage) {
+      setWarningType('ONLY_MESSAGE');
+      setShowPrivacyWarning(true);
+      return;
+    }
+
+    // Check for Disclosure
+    if (owner.privacy?.preDisclosure?.enabled && !disclosureAccepted) {
+      setWarningType('DISCLOSURE');
+      setShowPrivacyWarning(true);
+      return;
+    }
+
+    // If all clear, proceed
     api.incrementPropertyStat(property.id, type === 'call' ? 'callClicks' : 'messageClicks');
+    
+    if (type === 'call') {
+      window.location.href = `tel:${owner.phone}`;
+    } else {
+      window.open(`https://wa.me/${owner.phone.replace(/\D/g, '')}`, '_blank');
+    }
   };
 
   if (loading) return (
@@ -174,30 +205,34 @@ export const PropertyDetailsPage: React.FC = () => {
           {/* Image Gallery */}
           <div className="relative mb-4">
             {/* Mobile Scrollable View - Modern Rounded Gallery */}
-            <div className="relative md:hidden -mx-6 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl">
-              <div 
-                className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar"
-                onScroll={(e) => {
-                  const scrollLeft = (e.target as HTMLDivElement).scrollLeft;
-                  const width = (e.target as HTMLDivElement).clientWidth;
-                  const index = Math.round(scrollLeft / width);
-                  if (index !== currentImageIndex) setCurrentImageIndex(index);
-                }}
-              >
-                {allImages.map((img, idx) => (
-                  <div key={idx} className="min-w-full snap-center aspect-[21/9] relative">
-                    <img 
-                      src={img || null} 
-                      alt={`${property.title} - ${idx + 1}`}
-                      className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                ))}
+            <div className="relative md:hidden mb-6">
+              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl">
+                <div 
+                  className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar"
+                  onScroll={(e) => {
+                    const scrollLeft = (e.target as HTMLDivElement).scrollLeft;
+                    const width = (e.target as HTMLDivElement).clientWidth;
+                    const index = Math.round(scrollLeft / width);
+                    if (index !== currentImageIndex) setCurrentImageIndex(index);
+                  }}
+                >
+                  {allImages.map((img, idx) => (
+                    <div key={idx} className="min-w-full snap-center aspect-[4/3] relative">
+                      <img 
+                        src={img || null} 
+                        alt={`${property.title} - ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      {/* Subtle gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    </div>
+                  ))}
+                </div>
               </div>
               
               {/* Mobile Gallery Overlays */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
                 {allImages.map((_, idx) => (
                   <div 
                     key={idx} 
@@ -535,85 +570,23 @@ export const PropertyDetailsPage: React.FC = () => {
               </div>
 
               <div className="mb-8 space-y-4">
-                {owner?.privacy?.preDisclosure?.enabled && !disclosureAccepted ? (
-                  <div className="rounded-2xl border border-brand/20 bg-brand/5 p-6">
-                    <div className="mb-4 flex items-start gap-3 text-sm text-brand">
-                      <Info size={18} className="shrink-0 mt-0.5" />
-                      <p className="font-medium leading-relaxed">
-                        {owner.privacy.preDisclosure.message || "Serious tenants only, Please contact me only when you agree below terms & conditions"}
-                      </p>
-                    </div>
-                    
-                    {owner.privacy.preDisclosure.options && owner.privacy.preDisclosure.options.length > 0 && (
-                      <div className="mb-6 space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Owner Preferences</p>
-                        <div className="flex flex-wrap gap-2">
-                          {owner.privacy.preDisclosure.options.map((opt: string) => (
-                            <span key={opt} className="rounded-lg bg-white/5 px-3 py-1.5 text-[10px] font-medium text-white/60 border border-white/10">
-                              {opt}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <button 
-                      onClick={() => setDisclosureAccepted(true)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-black transition-transform hover:scale-[1.02]"
-                    >
-                      <CheckCircle2 size={18} />
-                      <span>Accept & View Contact</span>
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {dndActive ? (
-                      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500">
-                          <Calendar size={24} />
-                        </div>
-                        <h4 className="mb-1 font-bold text-red-500">Owner is Busy</h4>
-                        <p className="text-xs text-white/60">
-                          Reason: <span className="font-bold text-white/80">{owner?.privacy?.doNotDisturb?.reason}</span>
-                        </p>
-                        <p className="mt-2 text-[10px] text-white/40 italic">
-                          Please try again after {owner?.privacy?.doNotDisturb?.endTime}
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        {!owner?.privacy?.onlyMessage && (
-                          <a 
-                            href={`tel:${owner?.phone || ''}`}
-                            onClick={() => handleContactClick('call')}
-                            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-4 font-bold text-black transition-transform hover:scale-[1.02]"
-                          >
-                            <Phone size={20} />
-                            <span>Call Owner</span>
-                          </a>
-                        )}
-                        
-                        {owner?.privacy?.onlyMessage && (
-                          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-xs text-indigo-400 flex gap-3 items-start">
-                            <Info size={16} className="shrink-0 mt-0.5" />
-                            <p>Owner not accepting the calls this time, please make whatsapp message.</p>
-                          </div>
-                        )}
-
-                        <a 
-                          href={`https://wa.me/${owner?.phone?.replace(/\D/g, '') || ''}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => handleContactClick('message')}
-                          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform hover:scale-[1.02]"
-                        >
-                          <MessageSquare size={20} />
-                          <span>Chat on WhatsApp</span>
-                        </a>
-                      </>
-                    )}
-                  </>
-                )}
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={() => handleContactClick('call')}
+                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-4 font-bold text-black transition-transform hover:scale-[1.02] active:scale-95"
+                  >
+                    <Phone size={20} />
+                    <span>Call Owner</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleContactClick('message')}
+                    className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform hover:scale-[1.02] active:scale-95"
+                  >
+                    <MessageSquare size={20} />
+                    <span>Chat on WhatsApp</span>
+                  </button>
+                </div>
               </div>
 
               {owner && (
@@ -659,48 +632,118 @@ export const PropertyDetailsPage: React.FC = () => {
       {/* Mobile Sticky Contact Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 block border-t border-white/10 bg-black/80 p-4 backdrop-blur-xl md:hidden">
         <div className="flex gap-3">
-          {owner?.privacy?.preDisclosure?.enabled && !disclosureAccepted ? (
-            <button 
-              onClick={() => {
-                setDisclosureAccepted(true);
-                window.scrollTo({ top: document.getElementById('contact-section')?.offsetTop || 0, behavior: 'smooth' });
-              }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-sm font-bold text-black"
-            >
-              <CheckCircle2 size={18} />
-              <span>Accept Disclosure</span>
-            </button>
-          ) : dndActive ? (
-            <div className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-red-500/10 py-4 text-sm font-bold text-red-500 border border-red-500/20">
-              <Calendar size={18} />
-              <span>Owner is Busy</span>
-            </div>
-          ) : (
-            <>
-              {!owner?.privacy?.onlyMessage && (
-                <a 
-                  href={`tel:${owner?.phone || ''}`}
-                  onClick={() => handleContactClick('call')}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-sm font-bold text-black"
-                >
-                  <Phone size={18} />
-                  <span>Call</span>
-                </a>
-              )}
-              <a 
-                href={`https://wa.me/${owner?.phone?.replace(/\D/g, '') || ''}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => handleContactClick('message')}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-bold"
-              >
-                <MessageSquare size={18} />
-                <span>WhatsApp</span>
-              </a>
-            </>
-          )}
+          <button 
+            onClick={() => handleContactClick('call')}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-sm font-bold text-black active:scale-95"
+          >
+            <Phone size={18} />
+            <span>Call</span>
+          </button>
+          <button 
+            onClick={() => handleContactClick('message')}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-bold active:scale-95"
+          >
+            <MessageSquare size={18} />
+            <span>WhatsApp</span>
+          </button>
         </div>
       </div>
+
+      {/* Privacy Warning Modal */}
+      <AnimatePresence>
+        {showPrivacyWarning && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPrivacyWarning(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm rounded-[2.5rem] border border-white/10 bg-[#111111] p-8 shadow-2xl"
+            >
+              <div className="mb-6 flex justify-center">
+                <div className={`flex h-16 w-16 items-center justify-center rounded-full ${
+                  warningType === 'DND' ? 'bg-red-500/10 text-red-500' : 
+                  warningType === 'ONLY_MESSAGE' ? 'bg-indigo-500/10 text-indigo-500' : 
+                  'bg-brand/10 text-brand'
+                }`}>
+                  {warningType === 'DND' && <Calendar size={32} />}
+                  {warningType === 'ONLY_MESSAGE' && <MessageSquare size={32} />}
+                  {warningType === 'DISCLOSURE' && <Info size={32} />}
+                </div>
+              </div>
+
+              <h3 className="mb-2 text-center text-xl font-bold">
+                {warningType === 'DND' && 'Owner is Busy'}
+                {warningType === 'ONLY_MESSAGE' && 'Messages Only'}
+                {warningType === 'DISCLOSURE' && 'Owner Preferences'}
+              </h3>
+
+              <div className="mb-8 text-center text-sm text-white/60">
+                {warningType === 'DND' && (
+                  <div className="space-y-3">
+                    <p className="text-base font-bold text-red-500">
+                      Owner is not accepting calls due to "{owner?.privacy?.doNotDisturb?.reason}"
+                    </p>
+                    <p>Please try again some other time or leave a WhatsApp message.</p>
+                    {owner?.privacy?.doNotDisturb?.mode === 'SCHEDULED' && (
+                      <p className="text-[10px] italic opacity-50">
+                        Scheduled until {owner?.privacy?.doNotDisturb?.endTime}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {warningType === 'ONLY_MESSAGE' && (
+                  <p>The owner is currently not accepting calls. Please reach out via WhatsApp message instead.</p>
+                )}
+                {warningType === 'DISCLOSURE' && (
+                  <div className="space-y-4 text-left">
+                    <p className="font-medium text-brand leading-relaxed">
+                      {owner?.privacy?.preDisclosure?.message || "Please agree to the following terms before contacting:"}
+                    </p>
+                    {owner?.privacy?.preDisclosure?.options && owner.privacy.preDisclosure.options.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {owner.privacy.preDisclosure.options.map((opt: string) => (
+                          <span key={opt} className="rounded-lg bg-white/5 px-3 py-1.5 text-[10px] font-medium text-white/60 border border-white/10">
+                            {opt}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {warningType === 'DISCLOSURE' ? (
+                  <button 
+                    onClick={() => {
+                      setDisclosureAccepted(true);
+                      setShowPrivacyWarning(false);
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-4 font-bold text-black transition-transform active:scale-95"
+                  >
+                    <CheckCircle2 size={18} />
+                    <span>Accept & Continue</span>
+                  </button>
+                ) : null}
+                
+                <button 
+                  onClick={() => setShowPrivacyWarning(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform active:scale-95"
+                >
+                  <span>{warningType === 'DISCLOSURE' ? 'Cancel' : 'Close'}</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

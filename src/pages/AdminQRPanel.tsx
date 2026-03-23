@@ -7,13 +7,9 @@ import { Plus, Download, LayoutGrid, List, Loader2, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-interface AdminQRPanelProps {
-  onOpenAuth: () => void;
-}
-
-export const AdminQRPanel: React.FC<AdminQRPanelProps> = ({ onOpenAuth }) => {
+export const AdminQRPanel: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthReady } = useAuth();
+  const { user, isAuthReady, openAuth } = useAuth();
   const [count, setCount] = useState(5);
   const [generatedQRs, setGeneratedQRs] = useState<QRCodeData[]>([]);
   const [viewMode, setViewMode] = useState<'GRID' | 'LIST'>('GRID');
@@ -91,7 +87,7 @@ export const AdminQRPanel: React.FC<AdminQRPanelProps> = ({ onOpenAuth }) => {
             Go to Home
           </button>
           <button 
-            onClick={onOpenAuth}
+            onClick={() => openAuth('ADMIN')}
             className="rounded-2xl bg-brand px-8 py-4 font-bold text-black transition-transform hover:scale-105"
           >
             Admin Login

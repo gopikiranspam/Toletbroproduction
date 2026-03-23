@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { motion } from 'motion/react';
 import { 
   Shield, 
@@ -31,12 +31,18 @@ const TENANT_PREFERENCES = [
 
 const DND_REASONS: DNDReason[] = ["Busy", "Out of station", "Not available"];
 
-export const PrivacyControls: React.FC = () => {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
-  
-  const [settings, setSettings] = useState<PrivacySettings>({
+export interface PrivacyControlsRef {
+  save: () => Promise<void>;
+}
+
+export const PrivacyControls = forwardRef<PrivacyControlsRef, { onDirtyChange?: (isDirty: boolean) => void }>(
+  ({ onDirtyChange }, ref) => {
+    const { user } = useAuth();
+    const [loading, setLoading] = useState(false);
+    const [saved, setSaved] = useState(false);
+    
+    const [initialSettings, setInitialSettings] = useState<PrivacySettings | null>(null);
+    const [settings, setSettings] = useState<PrivacySettings>({
     doNotDisturb: {
       enabled: false,
       mode: 'MANUAL',
@@ -57,8 +63,16 @@ export const PrivacyControls: React.FC = () => {
   useEffect(() => {
     if (user?.privacy) {
       setSettings(user.privacy);
+      setInitialSettings(user.privacy);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (initialSettings && onDirtyChange) {
+      const isDirty = JSON.stringify(settings) !== JSON.stringify(initialSettings);
+      onDirtyChange(isDirty);
+    }
+  }, [settings, initialSettings, onDirtyChange]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -67,6 +81,8 @@ export const PrivacyControls: React.FC = () => {
       await updateDoc(doc(db, 'users', user.id), {
         privacy: settings
       });
+      setInitialSettings(settings);
+      if (onDirtyChange) onDirtyChange(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
@@ -75,6 +91,10 @@ export const PrivacyControls: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    save: handleSave
+  }));
 
   const toggleOption = (option: string) => {
     setSettings(prev => {
@@ -381,55 +401,49 @@ export const PrivacyControls: React.FC = () => {
             </label>
           </div>
 
-          {settings.preDisclosure.enabled && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="space-y-6 border-t border-[var(--border)] bg-[var(--bg)]/30 p-5"
-            >
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Instructions</label>
-                <textarea 
-                  value={settings.preDisclosure.message}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    preDisclosure: { ...prev.preDisclosure, message: e.target.value }
-                  }))}
-                  rows={2}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-3 text-xs focus:border-brand focus:outline-none"
-                  placeholder="Enter instructions..."
-                />
-              </div>
+          <div className="space-y-6 border-t border-[var(--border)] bg-[var(--bg)]/30 p-5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Instructions</label>
+              <textarea 
+                value={settings.preDisclosure.message}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  preDisclosure: { ...prev.preDisclosure, message: e.target.value }
+                }))}
+                rows={2}
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-3 text-xs focus:border-brand focus:outline-none"
+                placeholder="Enter instructions..."
+              />
+            </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Tenant Terms</label>
-                <div className="grid grid-cols-1 gap-2">
-                  {TENANT_PREFERENCES.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => toggleOption(option)}
-                      className={`flex items-center gap-3 rounded-xl border p-3 text-xs transition-all ${
-                        settings.preDisclosure.options?.includes(option)
-                          ? 'border-brand bg-brand/5 text-brand'
-                          : 'border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)]'
-                      }`}
-                    >
-                      <div className={`flex h-4 w-4 items-center justify-center rounded border transition-all ${
-                        settings.preDisclosure.options?.includes(option)
-                          ? 'border-brand bg-brand text-black'
-                          : 'border-[var(--border)] bg-white/10'
-                      }`}>
-                        {settings.preDisclosure.options?.includes(option) && <CheckCircle2 size={12} />}
-                      </div>
-                      <span>{option}</span>
-                    </button>
-                  ))}
-                </div>
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Tenant Terms</label>
+              <div className="grid grid-cols-1 gap-2">
+                {TENANT_PREFERENCES.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => toggleOption(option)}
+                    className={`flex items-center gap-3 rounded-xl border p-3 text-xs transition-all ${
+                      settings.preDisclosure.options?.includes(option)
+                        ? 'border-brand bg-brand/5 text-brand'
+                        : 'border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    <div className={`flex h-4 w-4 items-center justify-center rounded border transition-all ${
+                      settings.preDisclosure.options?.includes(option)
+                        ? 'border-brand bg-brand text-black'
+                        : 'border-[var(--border)] bg-white/10'
+                    }`}>
+                      {settings.preDisclosure.options?.includes(option) && <CheckCircle2 size={12} />}
+                    </div>
+                    <span>{option}</span>
+                  </button>
+                ))}
               </div>
-            </motion.div>
-          )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
+});

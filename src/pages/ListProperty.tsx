@@ -48,14 +48,10 @@ const NEARBY_FACILITIES_LIST = [
   "School", "Hospital", "Metro", "Bus Stop", "Market"
 ];
 
-interface ListPropertyProps {
-  onOpenAuth: () => void;
-}
-
-export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
+export const ListProperty: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, openAuth } = useAuth();
   const [stage, setStage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -333,7 +329,7 @@ export const ListProperty: React.FC<ListPropertyProps> = ({ onOpenAuth }) => {
         </p>
         <div className="mt-10 flex flex-col gap-4 sm:flex-row">
           <button 
-            onClick={onOpenAuth}
+            onClick={() => openAuth('USER')}
             className="rounded-2xl bg-brand px-10 py-4 font-bold text-black transition-transform hover:scale-105 active:scale-95"
           >
             Login to Continue
