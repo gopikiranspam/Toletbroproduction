@@ -140,11 +140,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             <MapPin size={10} className="text-brand" />
             <span className="line-clamp-1">{property.location}</span>
           </div>
-          {distance && (
-            <div className="text-[9px] font-bold text-brand uppercase tracking-wider">
-              {distance} km away
-            </div>
-          )}
         </div>
 
         <div className="flex items-center gap-4 border-t border-[var(--border)] pt-3">
@@ -156,10 +151,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             <Maximize size={12} className="text-brand" />
             <span>{property.sqft || 0} ft²</span>
           </div>
-          <div className="ml-auto flex items-center gap-1 text-[10px] font-bold text-brand">
-            <span>Details</span>
-            <Maximize size={10} />
-          </div>
+          
+          {property.lat && property.lng && (
+            <div className="ml-auto flex items-center gap-2">
+              {distance && (
+                <span className="text-[9px] font-bold text-brand uppercase tracking-wider">
+                  {distance} km
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

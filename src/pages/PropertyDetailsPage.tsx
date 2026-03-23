@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { auth } from '../firebase';
@@ -21,12 +21,15 @@ import {
   Calendar,
   User,
   Building2,
-  Compass
+  Compass,
+  Eye,
+  QrCode
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
-
 import { isDNDActive } from '../utils/privacy';
+import { useLocation } from '../hooks/useLocation';
+import { PropertyCard } from '../components/PropertyCard';
 
 export const PropertyDetailsPage: React.FC = () => {
   const { propertySlugId } = useParams<{ propertySlugId: string }>();
@@ -37,10 +40,27 @@ export const PropertyDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
+  const [nearbyProperties, setNearbyProperties] = useState<Property[]>([]);
+  const userLocation = useLocation();
   
   const isFavorite = property ? user?.favorites?.includes(property.id) : false;
 
   const dndActive = isDNDActive(owner?.privacy);
+
+  const distance = useMemo(() => {
+    if (!userLocation.lat || !userLocation.lng || !property?.lat || !property?.lng) return null;
+    
+    const R = 6371; // Earth's radius in km
+    const dLat = (property.lat - userLocation.lat) * Math.PI / 180;
+    const dLng = (property.lng - userLocation.lng) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(userLocation.lat * Math.PI / 180) * Math.cos(property.lat * Math.PI / 180) * 
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c;
+    return d.toFixed(1);
+  }, [userLocation.lat, userLocation.lng, property?.lat, property?.lng]);
 
   useEffect(() => {
     if (propertySlugId) {
@@ -64,6 +84,12 @@ export const PropertyDetailsPage: React.FC = () => {
 
             const o = await api.getOwnerById(p.ownerId);
             if (o) setOwner(o);
+
+            // Fetch nearby properties
+            if (p.lat && p.lng) {
+              const nearby = await api.getNearbyProperties(p.lat, p.lng, 5);
+              setNearbyProperties(nearby.filter(item => item.id !== p.id).slice(0, 6));
+            }
           }
         } catch (error) {
           console.error("Error fetching property details:", error);
@@ -268,6 +294,23 @@ export const PropertyDetailsPage: React.FC = () => {
               <span className="hidden md:inline-block text-sm text-white/40">ID: {property.id}</span>
             </div>
             <h1 className="mb-2 text-3xl font-bold tracking-tight md:text-5xl">{property.bhkType} {property.type}</h1>
+            
+            {/* Stats Bar */}
+            <div className="mb-4 flex flex-wrap items-center gap-4 border-b border-white/5 pb-4">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-white/40">
+                <Eye size={14} className="text-brand" />
+                <span>{property.views || 0} Views</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-white/40">
+                <Heart size={14} className="text-brand" />
+                <span>{property.favoritesCount || 0} Favorites</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-white/40">
+                <QrCode size={14} className="text-brand" />
+                <span>{(property.scans || 0) + (property.internalScans || 0)} Scans</span>
+              </div>
+            </div>
+
             {property.locality && (
               <div className="mb-4">
                 <p className="text-sm text-white/40">
@@ -277,17 +320,24 @@ export const PropertyDetailsPage: React.FC = () => {
                 <p className="mt-1 text-[10px] font-bold text-white/20 md:hidden uppercase tracking-widest">ID: {property.id}</p>
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               {property.lat && property.lng && (
-                <a 
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex w-full md:w-auto items-center justify-center md:justify-start gap-2 rounded-xl bg-brand/10 px-4 py-3 md:py-2 text-sm font-bold text-brand transition-all hover:bg-brand/20"
-                >
-                  <Compass size={18} />
-                  <span>Direction</span>
-                </a>
+                <div className="flex items-center gap-3">
+                  <a 
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg bg-brand/10 px-3 py-1.5 text-xs font-bold text-brand transition-all hover:bg-brand/20"
+                  >
+                    <Compass size={14} />
+                    <span>Direction</span>
+                  </a>
+                  {distance && (
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">
+                      {distance} km away
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -398,51 +448,23 @@ export const PropertyDetailsPage: React.FC = () => {
               </ul>
             </div>
 
-            {property.category === 'Rent' && (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-                <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
-                  <Info size={20} className="text-brand" />
-                  Pricing Details
-                </h3>
-                <ul className="space-y-4">
-                  <li className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-white/50">Monthly Rent</span>
-                    <span className="font-bold text-brand">₹{property.price.toLocaleString()}</span>
-                  </li>
-                  <li className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-white/50">Security Deposit</span>
-                    <span className="font-bold">₹{property.deposit?.toLocaleString() || 'N/A'}</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-white/50">Maintenance</span>
-                    <span className="font-bold">₹{property.maintenance?.toLocaleString() || '0'}</span>
-                  </li>
-                </ul>
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Nearby Tolets</h2>
+              <span className="text-xs font-bold text-brand uppercase tracking-widest">Similar Properties</span>
+            </div>
+            {nearbyProperties.length > 0 ? (
+              <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
+                {nearbyProperties.map((nearby) => (
+                  <div key={nearby.id} className="min-w-[280px] md:min-w-[320px]">
+                    <PropertyCard property={nearby} />
+                  </div>
+                ))}
               </div>
+            ) : (
+              <p className="text-white/40">No nearby properties found.</p>
             )}
-
-            {property.category === 'Sale' && (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-                <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
-                  <Info size={20} className="text-brand" />
-                  Sale Details
-                </h3>
-                <ul className="space-y-4">
-                  <li className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-white/50">Expected Price</span>
-                    <span className="font-bold text-brand">₹{property.price.toLocaleString()}</span>
-                  </li>
-                  <li className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-white/50">Negotiable</span>
-                    <span className="font-bold">{property.priceNegotiable ? 'Yes' : 'No'}</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-white/50">Loan Available</span>
-                    <span className="font-bold">{property.loanAvailable ? 'Yes' : 'No'}</span>
-                  </li>
-                </ul>
-              </div>
-            )}
+          </div>
           </div>
 
           <div className="mb-12">
