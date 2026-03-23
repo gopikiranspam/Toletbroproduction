@@ -57,6 +57,7 @@ export interface Property {
   // Geolocation
   lat?: number;
   lng?: number;
+  distance?: number;
   
   // Dashboard & Stats
   isOccupied?: boolean;

@@ -266,9 +266,9 @@ export const api = {
       const snapshot = await getDocs(collection(db, path));
       const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property));
       
-      // Filter by distance using Haversine formula
-      return allProperties.filter(p => {
-        if (!p.lat || !p.lng) return false;
+      // Calculate distance and filter
+      const withDistance = allProperties.map(p => {
+        if (!p.lat || !p.lng) return { ...p, distance: Infinity };
         
         const R = 6371; // Earth's radius in km
         const dLat = (p.lat - lat) * Math.PI / 180;
@@ -280,8 +280,13 @@ export const api = {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c;
         
-        return distance <= radiusKm;
+        return { ...p, distance };
       });
+
+      // Filter by radius and sort by distance ascending
+      return withDistance
+        .filter(p => p.distance <= radiusKm)
+        .sort((a, b) => (a.distance || 0) - (b.distance || 0));
     } catch (error) {
       handleFirestoreError(error, 'list' as any, path);
       return [];

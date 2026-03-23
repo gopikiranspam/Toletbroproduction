@@ -61,11 +61,18 @@ const HomePage = () => {
         
         // Try to get nearby properties on load
         try {
-          const pos = await mapsService.getCurrentLocation();
-          const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, 50);
-          setNearbyProperties(nearby);
+          // Use a timeout to not block the initial render
+          setTimeout(async () => {
+            try {
+              const pos = await mapsService.getCurrentLocation();
+              const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, 50);
+              setNearbyProperties(nearby);
+            } catch (err) {
+              console.log("Initial nearby search failed:", err);
+            }
+          }, 1000);
         } catch (err) {
-          console.log("Initial nearby search skipped or failed:", err);
+          console.log("Initial nearby search setup failed:", err);
         }
       } catch (err) {
         console.error("Failed to load properties:", err);
@@ -76,22 +83,28 @@ const HomePage = () => {
     loadData();
   }, []);
 
-  const handleNearbySearch = async () => {
+  const handleNearbySearch = async (radius?: number) => {
     setNearbyLoading(true);
+    const searchRadius = radius || 50;
     try {
       const pos = await mapsService.getCurrentLocation();
-      const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, 50);
+      const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, searchRadius);
       setNearbyProperties(nearby);
+      
       if (nearby.length > 0) {
-        // Scroll to nearby section
-        const element = document.getElementById('nearby-section');
-        element?.scrollIntoView({ behavior: 'smooth' });
+        // Use a small delay to ensure the section is rendered before scrolling
+        setTimeout(() => {
+          const element = document.getElementById('nearby-section');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
       } else {
-        alert("No properties found within 50km of your location.");
+        alert(`No properties found within ${searchRadius}km of your location.`);
       }
     } catch (err) {
       console.error("Nearby search failed:", err);
-      alert("Could not get your location. Please ensure GPS is enabled.");
+      alert("Could not get your location. Please ensure GPS is enabled and permissions are granted.");
     } finally {
       setNearbyLoading(false);
     }

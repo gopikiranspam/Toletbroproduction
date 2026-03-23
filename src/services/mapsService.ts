@@ -99,7 +99,7 @@ export const mapsService = {
         }, {
           enableHighAccuracy: true,
           timeout: 10000, // 10 seconds
-          maximumAge: 0
+          maximumAge: 60000 // 1 minute cache
         });
       }
     });

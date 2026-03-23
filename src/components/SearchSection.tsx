@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
 interface SearchSectionProps {
-  onNearbySearch: () => void;
+  onNearbySearch: (radius?: number) => void;
   isNearbyLoading: boolean;
 }
 
@@ -73,7 +73,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({ onNearbySearch, is
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={onNearbySearch}
+                  onClick={() => onNearbySearch(Number(radius))}
                   disabled={isNearbyLoading}
                   className="flex flex-1 md:flex-none h-12 md:h-12 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 rounded-2xl bg-brand/10 px-2 md:px-4 text-[10px] md:text-xs font-bold text-brand transition-all hover:bg-brand/20 disabled:opacity-50"
                 >
