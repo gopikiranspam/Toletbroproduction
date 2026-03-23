@@ -173,11 +173,19 @@ export const PropertyDetailsPage: React.FC = () => {
         <div className="lg:col-span-2">
           {/* Image Gallery */}
           <div className="relative mb-8">
-            {/* Mobile Scrollable View */}
-            <div className="relative md:hidden">
-              <div className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar rounded-[2rem] border border-white/10 bg-white/5">
+            {/* Mobile Scrollable View - Modern Rounded Gallery */}
+            <div className="relative md:hidden -mx-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl">
+              <div 
+                className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar"
+                onScroll={(e) => {
+                  const scrollLeft = (e.target as HTMLDivElement).scrollLeft;
+                  const width = (e.target as HTMLDivElement).clientWidth;
+                  const index = Math.round(scrollLeft / width);
+                  if (index !== currentImageIndex) setCurrentImageIndex(index);
+                }}
+              >
                 {allImages.map((img, idx) => (
-                  <div key={idx} className="min-w-full snap-center aspect-[4/3] relative">
+                  <div key={idx} className="min-w-full snap-center aspect-[16/9] relative">
                     <img 
                       src={img || null} 
                       alt={`${property.title} - ${idx + 1}`}
@@ -189,20 +197,27 @@ export const PropertyDetailsPage: React.FC = () => {
               </div>
               
               {/* Mobile Gallery Overlays */}
-              <div className="absolute bottom-4 right-4 rounded-full bg-black/60 px-3 py-1 text-[10px] font-bold text-white backdrop-blur-md border border-white/10">
-                {allImages.length} Photos
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+                {allImages.map((_, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      currentImageIndex === idx ? 'w-6 bg-brand' : 'w-1.5 bg-white/20'
+                    }`}
+                  />
+                ))}
               </div>
 
               <div className="absolute top-4 right-4 flex gap-2">
                 <button 
                   onClick={handleShare}
-                  className="rounded-full bg-black/60 p-2.5 text-white backdrop-blur-md border border-white/10"
+                  className="rounded-full bg-black/40 p-2.5 text-white backdrop-blur-md border border-white/10 transition-transform active:scale-90"
                 >
                   <Share2 size={18} />
                 </button>
                 <button 
                   onClick={handleToggleFavorite}
-                  className={`rounded-full bg-black/60 p-2.5 backdrop-blur-md border border-white/10 ${isFavorite ? 'text-brand' : 'text-white'}`}
+                  className={`rounded-full bg-black/40 p-2.5 backdrop-blur-md border border-white/10 transition-transform active:scale-90 ${isFavorite ? 'text-brand' : 'text-white'}`}
                 >
                   <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
                 </button>
@@ -269,9 +284,9 @@ export const PropertyDetailsPage: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Thumbnail Strip */}
+          {/* Thumbnail Strip - Hidden on Mobile */}
           {allImages.length > 1 && (
-            <div className="mb-8 flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="mb-8 hidden md:flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
               {allImages.map((img, idx) => (
                 <button 
                   key={idx}
@@ -322,18 +337,18 @@ export const PropertyDetailsPage: React.FC = () => {
             )}
             <div className="flex flex-wrap items-center gap-3">
               {property.lat && property.lng && (
-                <div className="flex items-center gap-3">
+                <div className="flex w-full md:w-auto items-center gap-3">
                   <a 
                     href={`https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-lg bg-brand/10 px-3 py-1.5 text-xs font-bold text-brand transition-all hover:bg-brand/20"
+                    className="flex flex-1 md:flex-none items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-black shadow-lg shadow-brand/20 transition-all hover:scale-[1.02] active:scale-95"
                   >
-                    <Compass size={14} />
-                    <span>Direction</span>
+                    <Compass size={18} />
+                    <span>Get Directions</span>
                   </a>
                   {distance && (
-                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider bg-brand/10 px-2 py-1 rounded-md">
                       {distance} km away
                     </span>
                   )}
@@ -342,8 +357,8 @@ export const PropertyDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Primary Pricing Details */}
-          <div className="mb-6 block md:hidden">
+          {/* Mobile Primary Pricing Details - Removed as per request */}
+          <div className="mb-6 hidden md:hidden">
             <div className="rounded-[1.5rem] border border-white/10 bg-brand/5 p-4 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-brand/10 blur-2xl" />
               
@@ -468,38 +483,38 @@ export const PropertyDetailsPage: React.FC = () => {
           </div>
 
           <div className="mb-12">
-            <h2 className="mb-6 text-2xl font-bold">Description</h2>
-            <p className="whitespace-pre-line text-lg leading-relaxed text-white/60">{property.description}</p>
+            <h2 className="mb-4 text-lg font-bold uppercase tracking-widest text-white/30">Description</h2>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-white/60">{property.description}</p>
           </div>
 
           <div className="mb-12">
-            <h2 className="mb-6 text-2xl font-bold">Amenities</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <h2 className="mb-4 text-lg font-bold uppercase tracking-widest text-white/30">Amenities</h2>
+            <div className="flex flex-wrap gap-2">
               {(property.amenities || []).length > 0 ? (
                 property.amenities.map((amenity, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-6 py-4">
-                    <CheckCircle2 size={18} className="text-brand" />
-                    <span className="text-sm font-medium">{amenity}</span>
+                  <div key={i} className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-4 py-2">
+                    <CheckCircle2 size={14} className="text-brand" />
+                    <span className="text-xs font-medium text-white/80">{amenity}</span>
                   </div>
                 ))
               ) : (
-                <p className="text-white/40">No specific amenities listed.</p>
+                <p className="text-xs text-white/40">No specific amenities listed.</p>
               )}
             </div>
           </div>
 
           <div className="mb-12">
-            <h2 className="mb-6 text-2xl font-bold">Nearby Facilities</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <h2 className="mb-4 text-lg font-bold uppercase tracking-widest text-white/30">Nearby Facilities</h2>
+            <div className="flex flex-wrap gap-2">
               {(property.nearbyFacilities || []).length > 0 ? (
                 property.nearbyFacilities.map((facility, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-6 py-4">
-                    <MapPin size={18} className="text-brand" />
-                    <span className="text-sm font-medium">{facility}</span>
+                  <div key={i} className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-4 py-2">
+                    <MapPin size={14} className="text-brand" />
+                    <span className="text-xs font-medium text-white/80">{facility}</span>
                   </div>
                 ))
               ) : (
-                <p className="text-white/40">No nearby facilities listed.</p>
+                <p className="text-xs text-white/40">No nearby facilities listed.</p>
               )}
             </div>
           </div>
@@ -509,7 +524,7 @@ export const PropertyDetailsPage: React.FC = () => {
         <div className="lg:col-span-1" id="contact-section">
           <div className="sticky top-32 space-y-8">
             <div className="rounded-[2.5rem] border border-white/10 bg-[#111111] p-8 shadow-2xl">
-              <div className="mb-8">
+              <div className="mb-8 hidden md:block">
                 <p className="text-sm font-bold uppercase tracking-widest text-white/30">
                   {property.category === 'Rent' ? 'Monthly Rent' : 'Expected Price'}
                 </p>
