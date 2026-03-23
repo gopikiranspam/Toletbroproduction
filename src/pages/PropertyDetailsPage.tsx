@@ -20,7 +20,8 @@ import {
   CheckCircle2,
   Calendar,
   User,
-  Building2
+  Building2,
+  Compass
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
@@ -145,63 +146,83 @@ export const PropertyDetailsPage: React.FC = () => {
         {/* Left Column: Images & Details */}
         <div className="lg:col-span-2">
           {/* Image Gallery */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="group relative mb-8 aspect-video overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 shadow-2xl"
-          >
-            <AnimatePresence mode="wait">
-              <motion.img 
-                key={currentImageIndex}
-                src={allImages[currentImageIndex] || null} 
-                alt={`${property.title} - ${currentImageIndex + 1}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                referrerPolicy="no-referrer"
-                className="h-full w-full object-cover"
-              />
-            </AnimatePresence>
-
-            {/* Navigation Arrows */}
-            {allImages.length > 1 && (
-              <>
-                <button 
-                  onClick={prevImage}
-                  className="absolute left-6 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-brand hover:text-black opacity-0 group-hover:opacity-100"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button 
-                  onClick={nextImage}
-                  className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-brand hover:text-black opacity-0 group-hover:opacity-100"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </>
-            )}
-
-            {/* Image Counter */}
-            <div className="absolute bottom-6 right-6 rounded-full bg-black/50 px-4 py-2 text-xs font-bold text-white backdrop-blur-md">
-              {currentImageIndex + 1} / {allImages.length}
+          <div className="relative mb-8">
+            {/* Mobile Scrollable View */}
+            <div className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar md:hidden rounded-3xl border border-white/10 bg-white/5">
+              {allImages.map((img, idx) => (
+                <div key={idx} className="min-w-full snap-center aspect-video relative">
+                  <img 
+                    src={img || null} 
+                    alt={`${property.title} - ${idx + 1}`}
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute bottom-4 right-4 rounded-full bg-black/50 px-3 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+                    {idx + 1} / {allImages.length}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div className="absolute top-6 right-6 flex gap-3">
-              <button 
-                onClick={handleShare}
-                className="rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20"
-              >
-                <Share2 size={20} />
-              </button>
-              <button 
-                onClick={handleToggleFavorite}
-                className={`rounded-full bg-black/50 p-3 backdrop-blur-md transition-colors hover:bg-white/20 ${isFavorite ? 'text-brand' : 'text-white'}`}
-              >
-                <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
-              </button>
-            </div>
-          </motion.div>
+            {/* Desktop Animated View */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="group relative hidden md:block aspect-video overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 shadow-2xl"
+            >
+              <AnimatePresence mode="wait">
+                <motion.img 
+                  key={currentImageIndex}
+                  src={allImages[currentImageIndex] || null} 
+                  alt={`${property.title} - ${currentImageIndex + 1}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-cover"
+                />
+              </AnimatePresence>
+
+              {/* Navigation Arrows */}
+              {allImages.length > 1 && (
+                <>
+                  <button 
+                    onClick={prevImage}
+                    className="absolute left-6 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-brand hover:text-black opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button 
+                    onClick={nextImage}
+                    className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-brand hover:text-black opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
+
+              {/* Image Counter */}
+              <div className="absolute bottom-6 right-6 rounded-full bg-black/50 px-4 py-2 text-xs font-bold text-white backdrop-blur-md">
+                {currentImageIndex + 1} / {allImages.length}
+              </div>
+
+              <div className="absolute top-6 right-6 flex gap-3">
+                <button 
+                  onClick={handleShare}
+                  className="rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+                >
+                  <Share2 size={20} />
+                </button>
+                <button 
+                  onClick={handleToggleFavorite}
+                  className={`rounded-full bg-black/50 p-3 backdrop-blur-md transition-colors hover:bg-white/20 ${isFavorite ? 'text-brand' : 'text-white'}`}
+                >
+                  <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+                </button>
+              </div>
+            </motion.div>
+          </div>
 
           {/* Thumbnail Strip */}
           {allImages.length > 1 && (
@@ -227,10 +248,23 @@ export const PropertyDetailsPage: React.FC = () => {
               </span>
               <span className="text-sm text-white/40">ID: {property.id}</span>
             </div>
-            <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-5xl">{property.title}</h1>
-            <div className="flex items-center gap-2 text-lg text-white/60">
-              <MapPin size={20} className="text-brand" />
-              <span>{property.fullAddress || property.location}</span>
+            <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-5xl">{property.bhkType} {property.type}</h1>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2 text-lg text-white/60">
+                <MapPin size={20} className="text-brand" />
+                <span>{property.location}</span>
+              </div>
+              {property.lat && property.lng && (
+                <a 
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-xl bg-brand/10 px-4 py-2 text-sm font-bold text-brand transition-all hover:bg-brand/20"
+                >
+                  <Compass size={18} />
+                  <span>Direction</span>
+                </a>
+              )}
             </div>
             {property.locality && (
               <p className="mt-2 text-sm text-white/40">
@@ -239,34 +273,38 @@ export const PropertyDetailsPage: React.FC = () => {
             )}
           </div>
 
-          <div className="mb-12 grid grid-cols-2 gap-6 rounded-3xl border border-white/10 bg-white/5 p-8 sm:grid-cols-4">
+          <div className="mb-12 grid grid-cols-4 gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-4 md:gap-6 md:rounded-3xl md:p-8">
             <div className="text-center">
-              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-                <Bed size={24} />
+              <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
+                <Bed size={20} className="md:hidden" />
+                <Bed size={24} className="hidden md:block" />
               </div>
-              <p className="text-xl font-bold">{property.bhkType || `${property.beds} BHK`}</p>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/30">BHK Type</p>
+              <p className="text-sm font-bold md:text-xl">{property.bhkType || `${property.beds} BHK`}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">BHK</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-                <Bath size={24} />
+              <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
+                <Bath size={20} className="md:hidden" />
+                <Bath size={24} className="hidden md:block" />
               </div>
-              <p className="text-xl font-bold">{property.bathrooms || property.baths}</p>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/30">Bathrooms</p>
+              <p className="text-sm font-bold md:text-xl">{property.bathrooms || property.baths}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">Baths</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-                <Maximize size={24} />
+              <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
+                <Maximize size={20} className="md:hidden" />
+                <Maximize size={24} className="hidden md:block" />
               </div>
-              <p className="text-xl font-bold">{property.sqft}</p>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/30">Square Ft</p>
+              <p className="text-sm font-bold md:text-xl">{property.sqft}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">Sq Ft</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-                <Home size={24} />
+              <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
+                <Home size={20} className="md:hidden" />
+                <Home size={24} className="hidden md:block" />
               </div>
-              <p className="text-xl font-bold">{property.furnishing}</p>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/30">Furnishing</p>
+              <p className="text-sm font-bold md:text-xl line-clamp-1">{property.furnishing.split('-')[0]}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">Furnish</p>
             </div>
           </div>
 

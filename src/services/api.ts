@@ -337,15 +337,13 @@ export const api = {
     const path = `properties/${id}`;
     try {
       const docRef = doc(db, 'properties', id);
-      // Use a simple update with increment if possible, but Firestore increment is better
-      // For now, let's just use the current logic but make it more reliable
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const currentVal = docSnap.data()[stat] || 0;
         await updateDoc(docRef, { [stat]: currentVal + 1 });
       }
     } catch (error) {
-      console.error(`Failed to increment ${stat}:`, error);
+      handleFirestoreError(error, OperationType.UPDATE, path);
     }
   },
 
