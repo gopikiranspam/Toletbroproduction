@@ -167,14 +167,14 @@ export const PropertyDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12 pb-32 md:pb-12">
+    <div className="mx-auto max-w-7xl px-6 py-6 md:py-12 pb-32 md:pb-12">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Left Column: Images & Details */}
         <div className="lg:col-span-2">
           {/* Image Gallery */}
-          <div className="relative mb-8">
+          <div className="relative mb-4">
             {/* Mobile Scrollable View - Modern Rounded Gallery */}
-            <div className="relative md:hidden -mx-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl">
+            <div className="relative md:hidden -mx-6 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl">
               <div 
                 className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar"
                 onScroll={(e) => {
@@ -185,7 +185,7 @@ export const PropertyDetailsPage: React.FC = () => {
                 }}
               >
                 {allImages.map((img, idx) => (
-                  <div key={idx} className="min-w-full snap-center aspect-[16/9] relative">
+                  <div key={idx} className="min-w-full snap-center aspect-[21/9] relative">
                     <img 
                       src={img || null} 
                       alt={`${property.title} - ${idx + 1}`}
@@ -197,12 +197,12 @@ export const PropertyDetailsPage: React.FC = () => {
               </div>
               
               {/* Mobile Gallery Overlays */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
                 {allImages.map((_, idx) => (
                   <div 
                     key={idx} 
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      currentImageIndex === idx ? 'w-6 bg-brand' : 'w-1.5 bg-white/20'
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      currentImageIndex === idx ? 'w-4 bg-brand' : 'w-1 bg-white/20'
                     }`}
                   />
                 ))}
@@ -301,7 +301,7 @@ export const PropertyDetailsPage: React.FC = () => {
             </div>
           )}
 
-          <div className="mb-8">
+          <div className="mb-4 md:mb-8">
             <div className="mb-4 flex items-center gap-2">
               <span className="hidden md:inline-block rounded-full bg-brand/10 px-4 py-1 text-xs font-bold text-brand uppercase tracking-widest">
                 {property.category} • {property.type}
@@ -357,8 +357,8 @@ export const PropertyDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Primary Pricing Details - Removed as per request */}
-          <div className="mb-6 hidden md:hidden">
+          {/* Mobile Primary Pricing Details */}
+          <div className="mb-6 block md:hidden">
             <div className="rounded-[1.5rem] border border-white/10 bg-brand/5 p-4 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-brand/10 blur-2xl" />
               
@@ -463,10 +463,10 @@ export const PropertyDetailsPage: React.FC = () => {
               </ul>
             </div>
 
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Nearby Tolets</h2>
-              <span className="text-xs font-bold text-brand uppercase tracking-widest">Similar Properties</span>
+          <div className="mb-6 md:mb-12">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl font-bold">Nearby Tolets</h2>
+              <span className="text-[10px] md:text-xs font-bold text-brand uppercase tracking-widest">Similar Properties</span>
             </div>
             {nearbyProperties.length > 0 ? (
               <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
@@ -482,13 +482,13 @@ export const PropertyDetailsPage: React.FC = () => {
           </div>
           </div>
 
-          <div className="mb-12">
-            <h2 className="mb-4 text-lg font-bold uppercase tracking-widest text-white/30">Description</h2>
+          <div className="mb-6 md:mb-12">
+            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-white/30">Description</h2>
             <p className="whitespace-pre-line text-sm leading-relaxed text-white/60">{property.description}</p>
           </div>
 
-          <div className="mb-12">
-            <h2 className="mb-4 text-lg font-bold uppercase tracking-widest text-white/30">Amenities</h2>
+          <div className="mb-6 md:mb-12">
+            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-white/30">Amenities</h2>
             <div className="flex flex-wrap gap-2">
               {(property.amenities || []).length > 0 ? (
                 property.amenities.map((amenity, i) => (
@@ -503,8 +503,8 @@ export const PropertyDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-12">
-            <h2 className="mb-4 text-lg font-bold uppercase tracking-widest text-white/30">Nearby Facilities</h2>
+          <div className="mb-6 md:mb-12">
+            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-white/30">Nearby Facilities</h2>
             <div className="flex flex-wrap gap-2">
               {(property.nearbyFacilities || []).length > 0 ? (
                 property.nearbyFacilities.map((facility, i) => (
@@ -522,9 +522,9 @@ export const PropertyDetailsPage: React.FC = () => {
 
         {/* Right Column: Pricing & Contact */}
         <div className="lg:col-span-1" id="contact-section">
-          <div className="sticky top-32 space-y-8">
-            <div className="rounded-[2.5rem] border border-white/10 bg-[#111111] p-8 shadow-2xl">
-              <div className="mb-8 hidden md:block">
+          <div className="sticky top-32 space-y-6 md:space-y-8">
+            <div className="rounded-3xl md:rounded-[2.5rem] border border-white/10 bg-[#111111] p-6 md:p-8 shadow-2xl">
+              <div className="mb-6 md:mb-8 hidden md:block">
                 <p className="text-sm font-bold uppercase tracking-widest text-white/30">
                   {property.category === 'Rent' ? 'Monthly Rent' : 'Expected Price'}
                 </p>
