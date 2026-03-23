@@ -115,10 +115,8 @@ service cloud.firestore {
 
     function isValidStatUpdate() {
       let statFields = ['scans', 'internalScans', 'views', 'favoritesCount', 'shares', 'callClicks', 'messageClicks'];
-      let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
-      
-      // Allow update if only stat fields are modified
-      return affectedKeys.hasOnly(statFields) && affectedKeys.size() > 0;
+      // Use changedKeys() if affectedKeys() is not working as expected, or just simplify
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(statFields);
     }
 
     // ===============================================================
@@ -150,9 +148,9 @@ service cloud.firestore {
       allow read: if true; // Publicly readable for tenants
       allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid && isValidProperty(request.resource.data);
       allow update: if 
-        (isAuthenticated() && resource.data.ownerId == request.auth.uid && isValidProperty(request.resource.data)) || 
+        isValidStatUpdate() ||
         isAdmin() ||
-        isValidStatUpdate();
+        (isAuthenticated() && resource.data.ownerId == request.auth.uid && isValidProperty(request.resource.data));
       allow delete: if (isAuthenticated() && resource.data.ownerId == request.auth.uid) || isAdmin();
     }
     

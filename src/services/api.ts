@@ -9,7 +9,8 @@ import {
   setDoc, 
   updateDoc, 
   serverTimestamp,
-  getDocFromServer
+  getDocFromServer,
+  increment
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Property, QRCodeData, Owner, OperationType } from '../types';
@@ -337,11 +338,10 @@ export const api = {
     const path = `properties/${id}`;
     try {
       const docRef = doc(db, 'properties', id);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const currentVal = docSnap.data()[stat] || 0;
-        await updateDoc(docRef, { [stat]: currentVal + 1 });
-      }
+      // Use atomic increment for better reliability and performance
+      await updateDoc(docRef, { 
+        [stat]: increment(1) 
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, path);
     }
@@ -374,10 +374,11 @@ export const api = {
       }
 
       await updateDoc(userRef, { favorites: newFavorites });
-
+      
       if (propSnap.exists()) {
-        const currentCount = propSnap.data().favoritesCount || 0;
-        await updateDoc(propRef, { favoritesCount: Math.max(0, currentCount + favoriteChange) });
+        await updateDoc(propRef, { 
+          favoritesCount: increment(favoriteChange) 
+        });
       }
 
       return !isFavorite;

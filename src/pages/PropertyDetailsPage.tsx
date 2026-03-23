@@ -141,27 +141,46 @@ export const PropertyDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-6 py-12 pb-32 md:pb-12">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Left Column: Images & Details */}
         <div className="lg:col-span-2">
           {/* Image Gallery */}
           <div className="relative mb-8">
             {/* Mobile Scrollable View */}
-            <div className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar md:hidden rounded-3xl border border-white/10 bg-white/5">
-              {allImages.map((img, idx) => (
-                <div key={idx} className="min-w-full snap-center aspect-video relative">
-                  <img 
-                    src={img || null} 
-                    alt={`${property.title} - ${idx + 1}`}
-                    className="h-full w-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute bottom-4 right-4 rounded-full bg-black/50 px-3 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-                    {idx + 1} / {allImages.length}
+            <div className="relative md:hidden">
+              <div className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar rounded-[2rem] border border-white/10 bg-white/5">
+                {allImages.map((img, idx) => (
+                  <div key={idx} className="min-w-full snap-center aspect-[4/3] relative">
+                    <img 
+                      src={img || null} 
+                      alt={`${property.title} - ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              
+              {/* Mobile Gallery Overlays */}
+              <div className="absolute bottom-4 right-4 rounded-full bg-black/60 px-3 py-1 text-[10px] font-bold text-white backdrop-blur-md border border-white/10">
+                {allImages.length} Photos
+              </div>
+
+              <div className="absolute top-4 right-4 flex gap-2">
+                <button 
+                  onClick={handleShare}
+                  className="rounded-full bg-black/60 p-2.5 text-white backdrop-blur-md border border-white/10"
+                >
+                  <Share2 size={18} />
+                </button>
+                <button 
+                  onClick={handleToggleFavorite}
+                  className={`rounded-full bg-black/60 p-2.5 backdrop-blur-md border border-white/10 ${isFavorite ? 'text-brand' : 'text-white'}`}
+                >
+                  <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
+                </button>
+              </div>
             </div>
 
             {/* Desktop Animated View */}
@@ -243,34 +262,79 @@ export const PropertyDetailsPage: React.FC = () => {
 
           <div className="mb-8">
             <div className="mb-4 flex items-center gap-2">
-              <span className="rounded-full bg-brand/10 px-4 py-1 text-xs font-bold text-brand uppercase tracking-widest">
+              <span className="hidden md:inline-block rounded-full bg-brand/10 px-4 py-1 text-xs font-bold text-brand uppercase tracking-widest">
                 {property.category} • {property.type}
               </span>
-              <span className="text-sm text-white/40">ID: {property.id}</span>
+              <span className="hidden md:inline-block text-sm text-white/40">ID: {property.id}</span>
             </div>
-            <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-5xl">{property.bhkType} {property.type}</h1>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 text-lg text-white/60">
-                <MapPin size={20} className="text-brand" />
-                <span>{property.location}</span>
+            <h1 className="mb-2 text-3xl font-bold tracking-tight md:text-5xl">{property.bhkType} {property.type}</h1>
+            {property.locality && (
+              <div className="mb-4">
+                <p className="text-sm text-white/40">
+                  {property.locality}, {property.city}
+                  <span className="hidden md:inline">, {property.state} - {property.pincode || property.zipCode}</span>
+                </p>
+                <p className="mt-1 text-[10px] font-bold text-white/20 md:hidden uppercase tracking-widest">ID: {property.id}</p>
               </div>
+            )}
+            <div className="flex flex-wrap items-center gap-4">
               {property.lat && property.lng && (
                 <a 
                   href={`https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-xl bg-brand/10 px-4 py-2 text-sm font-bold text-brand transition-all hover:bg-brand/20"
+                  className="flex w-full md:w-auto items-center justify-center md:justify-start gap-2 rounded-xl bg-brand/10 px-4 py-3 md:py-2 text-sm font-bold text-brand transition-all hover:bg-brand/20"
                 >
                   <Compass size={18} />
                   <span>Direction</span>
                 </a>
               )}
             </div>
-            {property.locality && (
-              <p className="mt-2 text-sm text-white/40">
-                {property.locality}, {property.city}, {property.state} - {property.pincode || property.zipCode}
-              </p>
-            )}
+          </div>
+
+          {/* Mobile Primary Pricing Details */}
+          <div className="mb-6 block md:hidden">
+            <div className="rounded-[1.5rem] border border-white/10 bg-brand/5 p-4 shadow-xl relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-brand/10 blur-2xl" />
+              
+              <div className="relative mb-4">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">
+                  {property.category === 'Rent' ? 'Monthly Rent' : 'Expected Price'}
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-3xl font-black text-brand">₹{property.price.toLocaleString()}</p>
+                  {property.category === 'Rent' && property.maintenance > 0 && (
+                    <p className="text-[10px] text-white/40 font-medium">+ ₹{property.maintenance} Maint.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
+                {property.category === 'Rent' ? (
+                  <>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Security Deposit</p>
+                      <p className="text-base font-bold text-white">₹{property.deposit?.toLocaleString() || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Maintenance</p>
+                      <p className="text-base font-bold text-white">₹{property.maintenance?.toLocaleString() || '0'}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Negotiable</p>
+                      <p className="text-base font-bold text-white">{property.priceNegotiable ? 'Yes' : 'No'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Loan Available</p>
+                      <p className="text-base font-bold text-white">{property.loanAvailable ? 'Yes' : 'No'}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="mb-12 grid grid-cols-4 gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-4 md:gap-6 md:rounded-3xl md:p-8">
@@ -420,7 +484,7 @@ export const PropertyDetailsPage: React.FC = () => {
         </div>
 
         {/* Right Column: Pricing & Contact */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1" id="contact-section">
           <div className="sticky top-32 space-y-8">
             <div className="rounded-[2.5rem] border border-white/10 bg-[#111111] p-8 shadow-2xl">
               <div className="mb-8">
@@ -552,6 +616,52 @@ export const PropertyDetailsPage: React.FC = () => {
               </ul>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Contact Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 block border-t border-white/10 bg-black/80 p-4 backdrop-blur-xl md:hidden">
+        <div className="flex gap-3">
+          {owner?.privacy?.preDisclosure?.enabled && !disclosureAccepted ? (
+            <button 
+              onClick={() => {
+                setDisclosureAccepted(true);
+                window.scrollTo({ top: document.getElementById('contact-section')?.offsetTop || 0, behavior: 'smooth' });
+              }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-sm font-bold text-black"
+            >
+              <CheckCircle2 size={18} />
+              <span>Accept Disclosure</span>
+            </button>
+          ) : dndActive ? (
+            <div className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-red-500/10 py-4 text-sm font-bold text-red-500 border border-red-500/20">
+              <Calendar size={18} />
+              <span>Owner is Busy</span>
+            </div>
+          ) : (
+            <>
+              {!owner?.privacy?.onlyMessage && (
+                <a 
+                  href={`tel:${owner?.phone || ''}`}
+                  onClick={() => handleContactClick('call')}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-sm font-bold text-black"
+                >
+                  <Phone size={18} />
+                  <span>Call</span>
+                </a>
+              )}
+              <a 
+                href={`https://wa.me/${owner?.phone?.replace(/\D/g, '') || ''}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => handleContactClick('message')}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-bold"
+              >
+                <MessageSquare size={18} />
+                <span>WhatsApp</span>
+              </a>
+            </>
+          )}
         </div>
       </div>
     </div>
