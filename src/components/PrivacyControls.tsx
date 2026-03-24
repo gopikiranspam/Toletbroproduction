@@ -432,7 +432,7 @@ export const PrivacyControls = forwardRef<PrivacyControlsRef, { onDirtyChange?: 
                     <div className={`flex h-4 w-4 items-center justify-center rounded border transition-all ${
                       settings.preDisclosure.options?.includes(option)
                         ? 'border-brand bg-brand text-black'
-                        : 'border-[var(--border)] bg-white/10'
+                        : 'border-[var(--border)] bg-[var(--bg)]'
                     }`}>
                       {settings.preDisclosure.options?.includes(option) && <CheckCircle2 size={12} />}
                     </div>

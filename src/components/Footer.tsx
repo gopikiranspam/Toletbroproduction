@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div>
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Company</h4>
+            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Company</h4>
             <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
               <li><a href="#" className="transition-colors hover:text-brand">About Us</a></li>
               <li><a href="#" className="transition-colors hover:text-brand">Our Team</a></li>
@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div>
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Support</h4>
+            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Support</h4>
             <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
               <li><a href="#" className="transition-colors hover:text-brand">Help Center</a></li>
               <li><a href="#" className="transition-colors hover:text-brand">Terms of Service</a></li>
@@ -47,7 +47,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div>
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Testimonials</h4>
+            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Testimonials</h4>
             <div className="space-y-4">
               <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-4">
                 <p className="text-xs italic text-[var(--text-secondary)]">"Found my dream villa in Malibu within a week. Exceptional service!"</p>
@@ -61,7 +61,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-20 border-t border-[var(--border)] pt-10 text-center text-xs text-[var(--text-secondary)]/50">
+        <div className="mt-20 border-t border-[var(--border)] pt-10 text-center text-xs text-[var(--text-secondary)]/70">
           <p>© 2026 LuxeEstate. All rights reserved. Designed for the elite.</p>
         </div>
       </div>

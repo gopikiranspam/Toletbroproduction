@@ -9,9 +9,12 @@ export const ThemeToggle: React.FC = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="relative flex h-9 w-16 cursor-pointer items-center rounded-full border border-white/10 bg-white/5 p-1 transition-colors hover:bg-white/10 dark:border-white/10 dark:bg-white/5"
+      className="relative flex h-9 w-16 cursor-pointer items-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] p-1 transition-colors hover:bg-[var(--bg)]"
       aria-label="Toggle theme"
     >
+      {/* Premium Glow Effect */}
+      <div className="siri-glow" />
+      
       <motion.div
         animate={{
           x: theme === 'dark' ? 28 : 0,
@@ -22,7 +25,7 @@ export const ThemeToggle: React.FC = () => {
         {theme === 'dark' ? <Moon size={14} /> : <Sun size={14} />}
       </motion.div>
       
-      <div className="absolute inset-0 flex items-center justify-between px-2 text-white/20">
+      <div className="absolute inset-0 flex items-center justify-between px-2 text-[var(--text-secondary)]/30">
         <Sun size={12} className={theme === 'light' ? 'opacity-0' : 'opacity-100'} />
         <Moon size={12} className={theme === 'dark' ? 'opacity-0' : 'opacity-100'} />
       </div>

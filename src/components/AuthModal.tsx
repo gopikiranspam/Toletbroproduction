@@ -196,7 +196,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
               <button 
                 onClick={handleGoogleLogin}
                 disabled={isLoggingIn}
-                className="flex w-full items-center justify-center gap-3 rounded-xl bg-white py-4 font-bold text-black transition-transform hover:scale-[1.02] disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-4 font-bold text-[var(--text-primary)] transition-transform hover:scale-[1.02] disabled:opacity-50"
               >
                 {isLoggingIn ? (
                   <Loader2 size={20} className="animate-spin" />

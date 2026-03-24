@@ -19,11 +19,11 @@
 
 :root {
   --bg: #ffffff;
-  --card-bg: #f8f9fa;
-  --border: rgba(0, 0, 0, 0.08);
-  --text-primary: #050505;
-  --text-secondary: rgba(0, 0, 0, 0.6);
-  --navbar-bg: rgba(255, 255, 255, 0.7);
+  --card-bg: #f5f7f9; /* Slightly darker for better contrast against white background */
+  --border: rgba(0, 0, 0, 0.12); /* More visible border in light mode */
+  --text-primary: #0a0a0a; /* Slightly darker black */
+  --text-secondary: rgba(0, 0, 0, 0.7); /* Darker secondary text for better readability */
+  --navbar-bg: rgba(255, 255, 255, 0.85); /* More opaque navbar for better separation */
 }
 
 .dark {
@@ -78,4 +78,43 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* Siri-inspired Premium Glow */
+@keyframes siri-glow {
+  0% {
+    background-position: 0% 50%;
+    filter: blur(6px) brightness(1);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: blur(10px) brightness(1.3);
+  }
+  100% {
+    background-position: 0% 50%;
+    filter: blur(6px) brightness(1);
+  }
+}
+
+.siri-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    -45deg,
+    #3b82f6, /* blue */
+    #8b5cf6, /* purple */
+    #ec4899, /* pink */
+    #22d3ee  /* cyan */
+  );
+  background-size: 300% 300%;
+  z-index: -1;
+  animation: siri-glow 5s ease-in-out infinite;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.dark .siri-glow {
+  opacity: 0.55;
+  filter: blur(8px) brightness(1.2);
 }

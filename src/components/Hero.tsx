@@ -11,9 +11,9 @@ export const Hero: React.FC = () => {
           src="https://images.unsplash.com/photo-1600607687940-4e524cb35a3a?auto=format&fit=crop&q=80&w=2000" 
           alt="Luxury Home"
           referrerPolicy="no-referrer"
-          className="h-full w-full object-cover opacity-20 dark:opacity-10"
+          className="h-full w-full object-cover opacity-30 dark:opacity-10"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)]/40 to-[var(--bg)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)]/20 to-[var(--bg)]"></div>
       </div>
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">

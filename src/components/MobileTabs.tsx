@@ -71,7 +71,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({ onOpenAuth }) => {
               <button
                 key="login-trigger"
                 onClick={onOpenAuth}
-                className="flex flex-col items-center gap-1 text-[var(--text-secondary)]/40 transition-colors"
+                className="flex flex-col items-center gap-1 text-[var(--text-secondary)]/60 transition-colors"
               >
                 <tab.icon size={20} />
                 <span className="text-[10px] font-medium">{tab.label}</span>
@@ -84,7 +84,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({ onOpenAuth }) => {
               key={tab.path}
               to={tab.path}
               className={`flex flex-col items-center gap-1 transition-colors ${
-                isActive(tab.path) ? 'text-brand' : 'text-[var(--text-secondary)]/40'
+                isActive(tab.path) ? 'text-brand' : 'text-[var(--text-secondary)]/60'
               }`}
             >
               <tab.icon size={20} />

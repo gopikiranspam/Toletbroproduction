@@ -53,10 +53,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
             {/* List My Property - Text link for mobile, button for desktop */}
             <button 
               onClick={handleListPropertyClick}
-              className="group relative flex items-center gap-1 px-1 py-1 transition-transform active:scale-95 md:rounded-xl md:bg-white md:px-4 md:py-2 md:shadow-sm md:hover:scale-105 md:border md:border-[var(--border)]"
+              className="group relative flex items-center gap-1 px-1 py-1 transition-transform active:scale-95 md:rounded-xl md:bg-[var(--card-bg)] md:px-4 md:py-2 md:shadow-sm md:hover:scale-105 md:border md:border-[var(--border)]"
             >
               <Plus size={16} className="text-brand" />
-              <span className="text-xs font-bold text-[var(--text-primary)] underline underline-offset-4 decoration-white md:text-black md:no-underline">
+              <span className="text-xs font-bold text-[var(--text-primary)] underline underline-offset-4 decoration-[var(--border)] md:no-underline">
                 <span className="md:hidden">List</span>
                 <span className="hidden md:inline">List your property</span>
               </span>

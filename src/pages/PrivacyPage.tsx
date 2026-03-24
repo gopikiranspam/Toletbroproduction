@@ -79,7 +79,7 @@ export const PrivacyPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm rounded-[2.5rem] border border-white/10 bg-[#111111] p-8 shadow-2xl"
+              className="relative w-full max-w-sm rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-8 shadow-2xl"
             >
               <div className="mb-6 flex justify-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
@@ -87,8 +87,8 @@ export const PrivacyPage: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="mb-2 text-center text-xl font-bold">Unsaved Changes</h3>
-              <p className="mb-8 text-center text-sm text-white/60">
+              <h3 className="mb-2 text-center text-xl font-bold text-[var(--text-primary)]">Unsaved Changes</h3>
+              <p className="mb-8 text-center text-sm text-[var(--text-secondary)]/60">
                 You have unsaved settings. Do you want to save them before leaving?
               </p>
 
@@ -108,7 +108,7 @@ export const PrivacyPage: React.FC = () => {
                 
                 <button 
                   onClick={() => blocker.proceed()}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform active:scale-95"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-4 font-bold text-[var(--text-primary)] transition-transform active:scale-95"
                 >
                   <X size={18} />
                   <span>No, Discard & Leave</span>

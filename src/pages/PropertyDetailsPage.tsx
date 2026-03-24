@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { auth } from '../firebase';
@@ -44,6 +44,17 @@ export const PropertyDetailsPage: React.FC = () => {
   const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
   const [warningType, setWarningType] = useState<'DND' | 'ONLY_MESSAGE' | 'DISCLOSURE' | null>(null);
   const userLocation = useLocation();
+  const nearbyToletsScrollRef = useRef<HTMLDivElement>(null);
+  
+  const scroll = (direction: 'left' | 'right') => {
+    if (nearbyToletsScrollRef.current) {
+      const scrollAmount = 400;
+      nearbyToletsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
   
   const isFavorite = property ? user?.favorites?.includes(property.id) : false;
 
@@ -171,19 +182,19 @@ export const PropertyDetailsPage: React.FC = () => {
   };
 
   if (loading) return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4">
+    <div className="flex h-screen flex-col items-center justify-center gap-4 bg-[var(--bg)]">
       <div className="h-12 w-12 animate-spin rounded-full border-4 border-brand border-t-transparent"></div>
-      <p className="font-medium text-white/60">Loading property details...</p>
+      <p className="font-medium text-[var(--text-secondary)]/60">Loading property details...</p>
     </div>
   );
 
   if (!property) return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4">
+    <div className="flex h-screen flex-col items-center justify-center gap-4 bg-[var(--bg)]">
       <div className="rounded-full bg-red-500/10 p-6 text-red-500">
         <Info size={48} />
       </div>
-      <h2 className="text-2xl font-bold">Property not found</h2>
-      <p className="text-white/60">The property you're looking for might have been removed.</p>
+      <h2 className="text-2xl font-bold text-[var(--text-primary)]">Property not found</h2>
+      <p className="text-[var(--text-secondary)]/60">The property you're looking for might have been removed.</p>
     </div>
   );
 
@@ -345,17 +356,16 @@ export const PropertyDetailsPage: React.FC = () => {
             </div>
             <h1 className="mb-2 text-3xl font-bold tracking-tight md:text-5xl">{property.bhkType} {property.type}</h1>
             
-            {/* Stats Bar */}
-            <div className="mb-4 flex flex-wrap items-center gap-4 border-b border-white/5 pb-4">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-white/40">
+              <div className="mb-4 flex flex-wrap items-center gap-4 border-b border-[var(--border)] pb-4">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-secondary)]">
                 <Eye size={14} className="text-brand" />
                 <span>{property.views || 0} Views</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-white/40">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-secondary)]">
                 <Heart size={14} className="text-brand" />
                 <span>{property.favoritesCount || 0} Favorites</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-white/40">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-secondary)]">
                 <QrCode size={14} className="text-brand" />
                 <span>{(property.scans || 0) + (property.internalScans || 0)} Scans</span>
               </div>
@@ -363,11 +373,11 @@ export const PropertyDetailsPage: React.FC = () => {
 
             {property.locality && (
               <div className="mb-4">
-                <p className="text-sm text-white/40">
+                <p className="text-sm text-[var(--text-secondary)]">
                   {property.locality}, {property.city}
                   <span className="hidden md:inline">, {property.state} - {property.pincode || property.zipCode}</span>
                 </p>
-                <p className="mt-1 text-[10px] font-bold text-white/20 md:hidden uppercase tracking-widest">ID: {property.id}</p>
+                <p className="mt-1 text-[10px] font-bold text-[var(--text-secondary)]/40 md:hidden uppercase tracking-widest">ID: {property.id}</p>
               </div>
             )}
             <div className="flex flex-wrap items-center gap-3">
@@ -394,42 +404,42 @@ export const PropertyDetailsPage: React.FC = () => {
 
           {/* Mobile Primary Pricing Details */}
           <div className="mb-6 block md:hidden">
-            <div className="rounded-[1.5rem] border border-white/10 bg-brand/5 p-4 shadow-xl relative overflow-hidden">
+            <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-4 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-brand/10 blur-2xl" />
               
               <div className="relative mb-4">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">
                   {property.category === 'Rent' ? 'Monthly Rent' : 'Expected Price'}
                 </p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-3xl font-black text-brand">₹{property.price.toLocaleString()}</p>
                   {property.category === 'Rent' && property.maintenance > 0 && (
-                    <p className="text-[10px] text-white/40 font-medium">+ ₹{property.maintenance} Maint.</p>
+                    <p className="text-[10px] text-[var(--text-secondary)] font-medium">+ ₹{property.maintenance} Maint.</p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
+              <div className="grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-4">
                 {property.category === 'Rent' ? (
                   <>
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Security Deposit</p>
-                      <p className="text-base font-bold text-white">₹{property.deposit?.toLocaleString() || 'N/A'}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">Security Deposit</p>
+                      <p className="text-base font-bold text-[var(--text-primary)]">₹{property.deposit?.toLocaleString() || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Maintenance</p>
-                      <p className="text-base font-bold text-white">₹{property.maintenance?.toLocaleString() || '0'}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">Maintenance</p>
+                      <p className="text-base font-bold text-[var(--text-primary)]">₹{property.maintenance?.toLocaleString() || '0'}</p>
                     </div>
                   </>
                 ) : (
                   <>
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Negotiable</p>
-                      <p className="text-base font-bold text-white">{property.priceNegotiable ? 'Yes' : 'No'}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">Negotiable</p>
+                      <p className="text-base font-bold text-[var(--text-primary)]">{property.priceNegotiable ? 'Yes' : 'No'}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Loan Available</p>
-                      <p className="text-base font-bold text-white">{property.loanAvailable ? 'Yes' : 'No'}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">Loan Available</p>
+                      <p className="text-base font-bold text-[var(--text-primary)]">{property.loanAvailable ? 'Yes' : 'No'}</p>
                     </div>
                   </>
                 )}
@@ -437,70 +447,70 @@ export const PropertyDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-12 grid grid-cols-4 gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-4 md:gap-6 md:rounded-3xl md:p-8">
+          <div className="mb-12 grid grid-cols-4 gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-4 md:grid-cols-4 md:gap-6 md:rounded-3xl md:p-8">
             <div className="text-center">
               <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
                 <Bed size={20} className="md:hidden" />
                 <Bed size={24} className="hidden md:block" />
               </div>
-              <p className="text-sm font-bold md:text-xl">{property.bhkType || `${property.beds} BHK`}</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">BHK</p>
+              <p className="text-sm font-bold md:text-xl text-[var(--text-primary)]">{property.bhkType || `${property.beds} BHK`}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-[var(--text-secondary)] md:text-xs">BHK</p>
             </div>
             <div className="text-center">
               <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
                 <Bath size={20} className="md:hidden" />
                 <Bath size={24} className="hidden md:block" />
               </div>
-              <p className="text-sm font-bold md:text-xl">{property.bathrooms || property.baths}</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">Baths</p>
+              <p className="text-sm font-bold md:text-xl text-[var(--text-primary)]">{property.bathrooms || property.baths}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-[var(--text-secondary)] md:text-xs">Baths</p>
             </div>
             <div className="text-center">
               <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
                 <Maximize size={20} className="md:hidden" />
                 <Maximize size={24} className="hidden md:block" />
               </div>
-              <p className="text-sm font-bold md:text-xl">{property.sqft}</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">Sq Ft</p>
+              <p className="text-sm font-bold md:text-xl text-[var(--text-primary)]">{property.sqft}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-[var(--text-secondary)] md:text-xs">Sq Ft</p>
             </div>
             <div className="text-center">
               <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand md:mb-2 md:h-12 md:w-12 md:rounded-2xl">
                 <Home size={20} className="md:hidden" />
                 <Home size={24} className="hidden md:block" />
               </div>
-              <p className="text-sm font-bold md:text-xl line-clamp-1">{property.furnishing.split('-')[0]}</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-white/30 md:text-xs">Furnish</p>
+              <p className="text-sm font-bold md:text-xl text-[var(--text-primary)] line-clamp-1">{property.furnishing.split('-')[0]}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-[var(--text-secondary)] md:text-xs">Furnish</p>
             </div>
           </div>
 
           <div className="mb-12 grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-              <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-bg)] p-8">
+              <h3 className="mb-6 flex items-center gap-2 text-xl font-bold text-[var(--text-primary)]">
                 <Building2 size={20} className="text-brand" />
                 Property Specifications
               </h3>
               <ul className="space-y-4">
-                <li className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="text-white/50">Floor Number</span>
-                  <span className="font-bold">{property.floorNumber} of {property.totalFloors}</span>
+                <li className="flex justify-between border-b border-[var(--border)] pb-2">
+                  <span className="text-[var(--text-secondary)]">Floor Number</span>
+                  <span className="font-bold text-[var(--text-primary)]">{property.floorNumber} of {property.totalFloors}</span>
                 </li>
-                <li className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="text-white/50">Preferred Tenant</span>
-                  <span className="font-bold">{property.preferredTenant}</span>
+                <li className="flex justify-between border-b border-[var(--border)] pb-2">
+                  <span className="text-[var(--text-secondary)]">Preferred Tenant</span>
+                  <span className="font-bold text-[var(--text-primary)]">{property.preferredTenant}</span>
                 </li>
-                <li className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="text-white/50">Available From</span>
-                  <span className="font-bold">{property.availableFrom}</span>
+                <li className="flex justify-between border-b border-[var(--border)] pb-2">
+                  <span className="text-[var(--text-secondary)]">Available From</span>
+                  <span className="font-bold text-[var(--text-primary)]">{property.availableFrom}</span>
                 </li>
                 <li className="flex justify-between">
-                  <span className="text-white/50">Listed By</span>
-                  <span className="font-bold">{property.userType || 'Owner'}</span>
+                  <span className="text-[var(--text-secondary)]">Listed By</span>
+                  <span className="font-bold text-[var(--text-primary)]">{property.userType || 'Owner'}</span>
                 </li>
               </ul>
             </div>
 
-          <div className="mb-6 md:mb-12">
+          <div className="mb-6 md:mb-12 md:hidden">
             <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h2 className="text-xl md:text-2xl font-bold">Nearby Tolets</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">Nearby Tolets</h2>
               <span className="text-[10px] md:text-xs font-bold text-brand uppercase tracking-widest">Similar Properties</span>
             </div>
             {nearbyProperties.length > 0 ? (
@@ -512,60 +522,98 @@ export const PropertyDetailsPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-white/40">No nearby properties found.</p>
+              <p className="text-[var(--text-secondary)]/40">No nearby properties found.</p>
             )}
           </div>
           </div>
 
           <div className="mb-6 md:mb-12">
-            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-white/30">Description</h2>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-white/60">{property.description}</p>
+            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Description</h2>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--text-secondary)]">{property.description}</p>
           </div>
 
           <div className="mb-6 md:mb-12">
-            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-white/30">Amenities</h2>
+            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Amenities</h2>
             <div className="flex flex-wrap gap-2">
               {(property.amenities || []).length > 0 ? (
                 property.amenities.map((amenity, i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-4 py-2">
+                  <div key={i} className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card-bg)] px-4 py-2">
                     <CheckCircle2 size={14} className="text-brand" />
-                    <span className="text-xs font-medium text-white/80">{amenity}</span>
+                    <span className="text-xs font-medium text-[var(--text-primary)]/80">{amenity}</span>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-white/40">No specific amenities listed.</p>
+                <p className="text-xs text-[var(--text-secondary)]/40">No specific amenities listed.</p>
               )}
             </div>
           </div>
 
           <div className="mb-6 md:mb-12">
-            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-white/30">Nearby Facilities</h2>
+            <h2 className="mb-3 md:mb-4 text-xs md:text-lg font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Nearby Facilities</h2>
             <div className="flex flex-wrap gap-2">
               {(property.nearbyFacilities || []).length > 0 ? (
                 property.nearbyFacilities.map((facility, i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-4 py-2">
+                  <div key={i} className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card-bg)] px-4 py-2">
                     <MapPin size={14} className="text-brand" />
-                    <span className="text-xs font-medium text-white/80">{facility}</span>
+                    <span className="text-xs font-medium text-[var(--text-primary)]/80">{facility}</span>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-white/40">No nearby facilities listed.</p>
+                <p className="text-xs text-[var(--text-secondary)]/40">No nearby facilities listed.</p>
               )}
             </div>
+          </div>
+
+          {/* Desktop Only: Nearby Tolets moved here */}
+          <div className="mb-6 md:mb-12 hidden md:block">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-[var(--text-primary)]">Nearby Tolets</h2>
+                <span className="text-[10px] md:text-xs font-bold text-brand uppercase tracking-widest">Similar Properties</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => scroll('left')}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] transition-all hover:border-brand hover:text-brand"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button 
+                  onClick={() => scroll('right')}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] transition-all hover:border-brand hover:text-brand"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+            {nearbyProperties.length > 0 ? (
+              <div 
+                ref={nearbyToletsScrollRef}
+                className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6 md:mx-0 md:px-0 scroll-smooth"
+              >
+                {nearbyProperties.map((nearby) => (
+                  <div key={nearby.id} className="min-w-[280px] md:min-w-[320px]">
+                    <PropertyCard property={nearby} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[var(--text-secondary)]/40">No nearby properties found.</p>
+            )}
           </div>
         </div>
 
         {/* Right Column: Pricing & Contact */}
         <div className="lg:col-span-1" id="contact-section">
           <div className="sticky top-32 space-y-6 md:space-y-8">
-            <div className="rounded-3xl md:rounded-[2.5rem] border border-white/10 bg-[#111111] p-6 md:p-8 shadow-2xl">
+            <div className="rounded-3xl md:rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-6 md:p-8 shadow-2xl">
               <div className="mb-6 md:mb-8 hidden md:block">
-                <p className="text-sm font-bold uppercase tracking-widest text-white/30">
+                <p className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">
                   {property.category === 'Rent' ? 'Monthly Rent' : 'Expected Price'}
                 </p>
                 <p className="text-4xl font-bold text-brand">₹{property.price.toLocaleString()}</p>
                 {property.category === 'Rent' && property.maintenance > 0 && (
-                  <p className="mt-1 text-xs text-white/40">+ ₹{property.maintenance} Maintenance</p>
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]/40">+ ₹{property.maintenance} Maintenance</p>
                 )}
               </div>
 
@@ -581,7 +629,7 @@ export const PropertyDetailsPage: React.FC = () => {
                   
                   <button 
                     onClick={() => handleContactClick('message')}
-                    className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform hover:scale-[1.02] active:scale-95"
+                    className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-4 font-bold text-[var(--text-primary)] transition-transform hover:scale-[1.02] active:scale-95"
                   >
                     <MessageSquare size={20} />
                     <span>Chat on WhatsApp</span>
@@ -590,27 +638,27 @@ export const PropertyDetailsPage: React.FC = () => {
               </div>
 
               {owner && (
-                <div className="border-t border-white/5 pt-8">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-white/30">Listed By</p>
+                <div className="border-t border-[var(--border)] pt-8">
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/50">Listed By</p>
                   <div className="flex items-center gap-4">
                     <div className="h-14 w-14 rounded-full bg-brand/20 flex items-center justify-center text-brand font-bold text-xl">
                       {owner.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-bold">{owner.name}</p>
-                      <p className="text-xs text-white/40">Verified {property.userType}</p>
+                      <p className="font-bold text-[var(--text-primary)]">{owner.name}</p>
+                      <p className="text-xs text-[var(--text-secondary)]/40">Verified {property.userType}</p>
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="rounded-[2.5rem] border border-white/10 bg-brand/5 p-8">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold">
+            <div className="rounded-[2.5rem] border border-[var(--border)] bg-brand/5 p-8">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
                 <Info size={18} className="text-brand" />
                 Safety Tips
               </h3>
-              <ul className="space-y-3 text-sm text-white/50">
+              <ul className="space-y-3 text-sm text-[var(--text-secondary)]">
                 <li className="flex gap-2">
                   <span className="text-brand">•</span>
                   <span>Never pay in advance without visiting the property.</span>
@@ -630,7 +678,7 @@ export const PropertyDetailsPage: React.FC = () => {
       </div>
 
       {/* Mobile Sticky Contact Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 block border-t border-white/10 bg-black/80 p-4 backdrop-blur-xl md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-50 block border-t border-[var(--border)] bg-[var(--navbar-bg)] p-4 backdrop-blur-xl md:hidden">
         <div className="flex gap-3">
           <button 
             onClick={() => handleContactClick('call')}
@@ -641,7 +689,7 @@ export const PropertyDetailsPage: React.FC = () => {
           </button>
           <button 
             onClick={() => handleContactClick('message')}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-bold active:scale-95"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-4 text-sm font-bold text-[var(--text-primary)] active:scale-95"
           >
             <MessageSquare size={18} />
             <span>WhatsApp</span>
@@ -664,7 +712,7 @@ export const PropertyDetailsPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm rounded-[2.5rem] border border-white/10 bg-[#111111] p-8 shadow-2xl"
+              className="relative w-full max-w-sm rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-8 shadow-2xl"
             >
               <div className="mb-6 flex justify-center">
                 <div className={`flex h-16 w-16 items-center justify-center rounded-full ${
@@ -678,13 +726,13 @@ export const PropertyDetailsPage: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="mb-2 text-center text-xl font-bold">
+              <h3 className="mb-2 text-center text-xl font-bold text-[var(--text-primary)]">
                 {warningType === 'DND' && 'Owner is Busy'}
                 {warningType === 'ONLY_MESSAGE' && 'Messages Only'}
                 {warningType === 'DISCLOSURE' && 'Owner Preferences'}
               </h3>
 
-              <div className="mb-8 text-center text-sm text-white/60">
+              <div className="mb-8 text-center text-sm text-[var(--text-secondary)]">
                 {warningType === 'DND' && (
                   <div className="space-y-3">
                     <p className="text-base font-bold text-red-500">
@@ -709,7 +757,7 @@ export const PropertyDetailsPage: React.FC = () => {
                     {owner?.privacy?.preDisclosure?.options && owner.privacy.preDisclosure.options.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {owner.privacy.preDisclosure.options.map((opt: string) => (
-                          <span key={opt} className="rounded-lg bg-white/5 px-3 py-1.5 text-[10px] font-medium text-white/60 border border-white/10">
+                          <span key={opt} className="rounded-lg bg-[var(--bg)] px-3 py-1.5 text-[10px] font-medium text-[var(--text-secondary)] border border-[var(--border)]">
                             {opt}
                           </span>
                         ))}
@@ -735,7 +783,7 @@ export const PropertyDetailsPage: React.FC = () => {
                 
                 <button 
                   onClick={() => setShowPrivacyWarning(false)}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 font-bold transition-transform active:scale-95"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-4 font-bold text-[var(--text-primary)] transition-transform active:scale-95"
                 >
                   <span>{warningType === 'DISCLOSURE' ? 'Cancel' : 'Close'}</span>
                 </button>
