@@ -9,11 +9,11 @@ export const ThemeToggle: React.FC = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="relative flex h-9 w-16 cursor-pointer items-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] p-1 transition-colors hover:bg-[var(--bg)] overflow-hidden"
+      className="relative flex h-9 w-16 cursor-pointer items-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] p-1 transition-colors hover:bg-[var(--bg)]"
       aria-label="Toggle theme"
     >
-      {/* Premium Inner Glow Effect */}
-      <div className="siri-inner-glow" />
+      {/* Premium Glow Effect */}
+      <div className="siri-glow" />
       
       <motion.div
         animate={{
