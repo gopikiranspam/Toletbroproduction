@@ -78,7 +78,7 @@ export const FavoritesPage: React.FC = () => {
     <div className="min-h-screen bg-[var(--bg)] pb-32 pt-24 px-6">
       <SEO 
         title="My Favorites"
-        description="View and manage your favorite luxury properties on LuxeEstate."
+        description="View and manage your favorite properties on TOLETBRO."
       />
       <div className="mx-auto max-w-7xl space-y-12">
         <header>

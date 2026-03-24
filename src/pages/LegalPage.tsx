@@ -16,7 +16,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
     <div className="min-h-screen bg-[var(--bg)] py-20 px-6">
       <SEO 
         title={isPrivacy ? 'Privacy Policy' : 'Terms of Service'}
-        description={isPrivacy ? 'Our commitment to protecting your personal data.' : 'The terms and conditions for using LuxeEstate services.'}
+        description={isPrivacy ? 'Our commitment to protecting your personal data.' : 'The terms and conditions for using TOLETBRO services.'}
       />
       
       <div className="mx-auto max-w-3xl">
@@ -93,7 +93,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
               <>
                 <section className="space-y-4">
                   <h2 className="text-xl font-bold text-[var(--text-primary)]">1. Acceptance of Terms</h2>
-                  <p>By accessing or using LuxeEstate, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+                  <p>By accessing or using TOLETBRO, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
                 </section>
 
                 <section className="space-y-4">
@@ -108,7 +108,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
 
                 <section className="space-y-4">
                   <h2 className="text-xl font-bold text-[var(--text-primary)]">4. Limitation of Liability</h2>
-                  <p>LuxeEstate is a platform connecting property owners and seekers. We are not responsible for the condition of properties or the conduct of users offline.</p>
+                  <p>TOLETBRO is a platform connecting property owners and seekers. We are not responsible for the condition of properties or the conduct of users offline.</p>
                 </section>
               </>
             )}
@@ -119,7 +119,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
               Questions about our {isPrivacy ? 'Privacy Policy' : 'Terms'}?
             </p>
             <p className="mt-1 text-xs text-[var(--text-secondary)]">
-              Contact our legal team at <span className="text-brand font-bold">legal@luxeestate.com</span>
+              Contact our legal team at <span className="text-brand font-bold">legal@toletbro.com</span>
             </p>
           </div>
         </motion.div>

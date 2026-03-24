@@ -23,11 +23,11 @@ export const Hero: React.FC = () => {
           transition={{ duration: 0.8 }}
         >
           <h1 className="mb-3 text-2xl font-bold tracking-tight sm:text-3xl md:text-6xl text-[var(--text-primary)] leading-[1.2]">
-            Find All Nearby <br />
-            <span className="text-brand italic serif">Tolets</span>
+            Find the nearest, <br />
+            <span className="text-brand italic serif">rent house</span>
           </h1>
           <p className="mx-auto mb-6 max-w-2xl text-[11px] leading-relaxed md:text-base text-[var(--text-secondary)] opacity-90">
-            Smart Tolet Board | Just Scan, See and Contact owner | No fake or broker listed houses | Free to use
+            We invented smart tolet boards to eliminates fake and broker listings
           </p>
         </motion.div>
       </div>

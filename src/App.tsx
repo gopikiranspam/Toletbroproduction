@@ -201,8 +201,8 @@ const HomePage = () => {
   return (
     <main className="pb-20 md:pb-0">
       <SEO 
-        title="LuxeEstate | Premium Real Estate & Smart Tolet Boards"
-        description="Redefining luxury real estate with an exclusive collection of the world's most prestigious properties. Find your next masterpiece with LuxeEstate."
+        title="TOLETBRO | Smart Tolet Boards & Direct Rentals"
+        description="Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings"
         canonical={window.location.origin}
       />
       <Hero />

@@ -11,14 +11,14 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'LuxeEstate | Premium Real Estate & Smart Tolet Boards',
-  description = 'Redefining luxury real estate with an exclusive collection of the world\'s most prestigious properties. Find your next masterpiece with LuxeEstate.',
+  title = 'TOLETBRO | Smart Tolet Boards & Direct Rentals',
+  description = 'Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings',
   canonical,
   ogType = 'website',
   ogImage = 'https://images.unsplash.com/photo-1600585154340-be6199f7d009?auto=format&fit=crop&q=80&w=1000',
   twitterCard = 'summary_large_image',
 }) => {
-  const siteTitle = title.includes('LuxeEstate') ? title : `${title} | LuxeEstate`;
+  const siteTitle = title.includes('TOLETBRO') ? title : `${title} | TOLETBRO`;
 
   return (
     <Helmet>

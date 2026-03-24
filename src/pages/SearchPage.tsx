@@ -80,7 +80,7 @@ export const SearchPage: React.FC = () => {
     <div className="mx-auto max-w-7xl px-6 py-12">
       <SEO 
         title={`Properties in ${area ? `${area}, ` : ''}${city}`}
-        description={`Find the best properties for rent in ${area ? `${area}, ` : ''}${city}. Browse ${filteredProperties.length} luxury listings on LuxeEstate.`}
+        description={`Find the best properties for rent in ${area ? `${area}, ` : ''}${city}. Browse ${filteredProperties.length} listings on TOLETBRO.`}
       />
       <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
         <div>

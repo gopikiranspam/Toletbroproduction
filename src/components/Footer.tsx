@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Instagram, Twitter, Facebook, Linkedin } from 'lucide-react';
+import { QrCode, Instagram, Twitter, Facebook, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
@@ -10,12 +10,12 @@ export const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-1">
             <div className="mb-6 flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-black">
-                <Home size={24} />
+                <QrCode size={24} />
               </div>
-              <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">LuxeEstate</span>
+              <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">TOLETBRO</span>
             </div>
             <p className="mb-6 text-sm text-[var(--text-secondary)] leading-relaxed">
-              Redefining luxury real estate with an exclusive collection of the world's most prestigious properties.
+              Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings
             </p>
             <div className="flex gap-4">
               <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Instagram size={20} /></a>
@@ -62,7 +62,7 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="mt-20 border-t border-[var(--border)] pt-10 text-center text-xs text-[var(--text-secondary)]/70">
-          <p>© 2026 LuxeEstate. All rights reserved. Designed for the elite.</p>
+          <p>© 2026 TOLETBRO. All rights reserved.</p>
         </div>
       </div>
     </footer>

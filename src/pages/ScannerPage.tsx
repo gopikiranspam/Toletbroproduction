@@ -59,7 +59,7 @@ export const ScannerPage: React.FC = () => {
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
       <SEO 
         title="Scan Smart Tolet Board"
-        description="Scan any LuxeEstate Smart Tolet Board to instantly view property details, photos, and contact the owner directly."
+        description="Scan any TOLETBRO Smart Tolet Board to instantly view property details, photos, and contact the owner directly."
       />
       {/* Header */}
       <div className="flex items-center justify-between p-6 text-white">
