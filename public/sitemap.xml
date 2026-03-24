@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ais-dev-sbxykxez2bpjkr3wim6q4c-231502474473.asia-east1.run.app/</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-sbxykxez2bpjkr3wim6q4c-231502474473.asia-east1.run.app/privacy-policy</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-sbxykxez2bpjkr3wim6q4c-231502474473.asia-east1.run.app/terms-of-service</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://ais-dev-sbxykxez2bpjkr3wim6q4c-231502474473.asia-east1.run.app/scan</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>

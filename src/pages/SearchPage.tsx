@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { Property } from '../types';
+import { SEO } from '../components/SEO';
 import { PropertyCard } from '../components/PropertyCard';
 import { FilterBar } from '../components/FilterBar';
 import { FilterModal, FilterState } from '../components/FilterModal';
@@ -77,6 +78,10 @@ export const SearchPage: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
+      <SEO 
+        title={`Properties in ${area ? `${area}, ` : ''}${city}`}
+        description={`Find the best properties for rent in ${area ? `${area}, ` : ''}${city}. Browse ${filteredProperties.length} luxury listings on LuxeEstate.`}
+      />
       <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="mb-4 flex items-center gap-2 text-brand">

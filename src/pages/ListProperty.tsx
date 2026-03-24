@@ -649,7 +649,7 @@ export const ListProperty: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-5">
                     {previews.map((preview, index) => (
                       <div key={index} className="group relative aspect-square overflow-hidden rounded-2xl border border-[var(--border)]">
-                        <img src={preview || null} alt="" className="h-full w-full object-cover" />
+                        <img src={preview || null} alt={`Property preview ${index + 1}`} className="h-full w-full object-cover" />
                         <button 
                           onClick={() => removeImage(index)}
                           className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"

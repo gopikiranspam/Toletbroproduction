@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Property } from '../types';
+import { SEO } from '../components/SEO';
 import { PropertyCard } from '../components/PropertyCard';
 
 export const FavoritesPage: React.FC = () => {
@@ -75,6 +76,10 @@ export const FavoritesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] pb-32 pt-24 px-6">
+      <SEO 
+        title="My Favorites"
+        description="View and manage your favorite luxury properties on LuxeEstate."
+      />
       <div className="mx-auto max-w-7xl space-y-12">
         <header>
           <div className="flex items-center gap-2 text-brand mb-2">

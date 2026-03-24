@@ -3,6 +3,7 @@ import { QRScanner } from '../components/QRScanner';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, QrCode, Smartphone, Loader2 } from 'lucide-react';
+import { SEO } from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 
 export const ScannerPage: React.FC = () => {
@@ -56,6 +57,10 @@ export const ScannerPage: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+      <SEO 
+        title="Scan Smart Tolet Board"
+        description="Scan any LuxeEstate Smart Tolet Board to instantly view property details, photos, and contact the owner directly."
+      />
       {/* Header */}
       <div className="flex items-center justify-between p-6 text-white">
         <div className="flex items-center gap-3">

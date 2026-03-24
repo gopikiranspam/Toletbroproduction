@@ -38,6 +38,9 @@ import { Dashboard } from './pages/Dashboard';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { HelmetProvider } from 'react-helmet-async';
+import { SEO } from './components/SEO';
+import { LegalPage } from './pages/LegalPage';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -197,6 +200,11 @@ const HomePage = () => {
 
   return (
     <main className="pb-20 md:pb-0">
+      <SEO 
+        title="LuxeEstate | Premium Real Estate & Smart Tolet Boards"
+        description="Redefining luxury real estate with an exclusive collection of the world's most prestigious properties. Find your next masterpiece with LuxeEstate."
+        canonical={window.location.origin}
+      />
       <Hero />
       <SearchSection onNearbySearch={handleNearbySearch} isNearbyLoading={nearbyLoading} />
 
@@ -532,16 +540,20 @@ const router = createBrowserRouter([
       { path: "/profile", element: <ProfilePage /> },
       { path: "/privacy-controls", element: <PrivacyPage /> },
       { path: "/list-property", element: <ListProperty /> },
+      { path: "/privacy-policy", element: <LegalPage type="privacy" /> },
+      { path: "/terms-of-service", element: <LegalPage type="terms" /> },
     ]
   }
 ]);
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }

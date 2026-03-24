@@ -29,6 +29,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { isDNDActive } from '../utils/privacy';
 import { useLocation } from '../hooks/useLocation';
+import { SEO } from '../components/SEO';
 import { PropertyCard } from '../components/PropertyCard';
 
 export const PropertyDetailsPage: React.FC = () => {
@@ -208,8 +209,38 @@ export const PropertyDetailsPage: React.FC = () => {
     setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": property.title,
+    "description": property.description,
+    "image": property.images?.[0] || property.imageUrl,
+    "url": window.location.href,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": property.city,
+      "addressRegion": property.area,
+      "addressCountry": "IN"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": property.rent,
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock"
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-6 md:py-12 pb-32 md:pb-12">
+      <SEO 
+        title={`${property.title} in ${property.area}, ${property.city}`}
+        description={`${property.bhkType} ${property.type} for rent in ${property.area}, ${property.city}. ${property.description.substring(0, 150)}...`}
+        ogImage={property.images?.[0] || property.imageUrl}
+        ogType="article"
+      />
+      <script type="application/ld+json">
+        {JSON.stringify(structuredData)}
+      </script>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Left Column: Images & Details */}
         <div className="lg:col-span-2">
@@ -341,7 +372,7 @@ export const PropertyDetailsPage: React.FC = () => {
                     currentImageIndex === idx ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={img || null} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={img || null} alt={`${property.title} - view ${idx + 1}`} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
             </div>
