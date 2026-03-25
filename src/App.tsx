@@ -41,6 +41,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from './components/SEO';
 import { LegalPage } from './pages/LegalPage';
+import { AboutUsPage } from './pages/AboutUsPage';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -540,6 +541,7 @@ const router = createBrowserRouter([
       { path: "/profile", element: <ProfilePage /> },
       { path: "/privacy-controls", element: <PrivacyPage /> },
       { path: "/list-property", element: <ListProperty /> },
+      { path: "/about-us", element: <AboutUsPage /> },
       { path: "/privacy-policy", element: <LegalPage type="privacy" /> },
       { path: "/terms-of-service", element: <LegalPage type="terms" /> },
     ]

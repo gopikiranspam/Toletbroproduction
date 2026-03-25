@@ -18,7 +18,7 @@ export const Footer: React.FC = () => {
               Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Instagram size={20} /></a>
+              <a href="https://instagram.com/gopikiran1811" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Instagram size={20} /></a>
               <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Twitter size={20} /></a>
               <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Facebook size={20} /></a>
               <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Linkedin size={20} /></a>
@@ -28,7 +28,7 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Company</h4>
             <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
-              <li><a href="#" className="transition-colors hover:text-brand">About Us</a></li>
+              <li><Link to="/about-us" className="transition-colors hover:text-brand">About Us</Link></li>
               <li><a href="#" className="transition-colors hover:text-brand">Our Team</a></li>
               <li><a href="#" className="transition-colors hover:text-brand">Careers</a></li>
               <li><a href="#" className="transition-colors hover:text-brand">Contact</a></li>
