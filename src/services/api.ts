@@ -18,15 +18,17 @@ import { safeLog, safeStringify } from '../utils/logger';
 
 // Error handler for Firestore permissions
 const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
+  const user = auth.currentUser;
+  
   const errInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
+      userId: user?.uid || 'unauthenticated',
+      email: user?.email || 'none',
+      emailVerified: user?.emailVerified || false,
+      isAnonymous: user?.isAnonymous || false,
+      tenantId: user?.tenantId || 'none',
+      providerInfo: user?.providerData.map(provider => ({
         providerId: provider.providerId,
         displayName: provider.displayName,
         email: provider.email,
@@ -39,6 +41,10 @@ const handleFirestoreError = (error: unknown, operationType: OperationType, path
 
   const stringifiedInfo = safeStringify(errInfo);
   safeLog.error('Firestore Error: ', stringifiedInfo);
+  
+  // Log a very specific marker for the system to pick up
+  console.error('FIRESTORE_PERMISSION_DENIED:', stringifiedInfo);
+  
   throw new Error(stringifiedInfo);
 };
 
@@ -49,7 +55,10 @@ export const testConnection = async () => {
   } catch (error) {
     if(error instanceof Error && error.message.includes('the client is offline')) {
       console.error("Please check your Firebase configuration.");
+      throw new Error('offline');
     }
+    // Re-throw other errors
+    throw error;
   }
 };
 

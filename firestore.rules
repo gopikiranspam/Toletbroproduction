@@ -51,13 +51,17 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')) ||
         (request.auth.token.email == "gopikiranspam@gmail.com" && request.auth.token.email_verified == true)
       );
     }
 
     function isPropertyOwner(propertyId) {
-      return isAuthenticated() && get(/databases/$(database)/documents/properties/$(propertyId)).data.ownerId == request.auth.uid;
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/properties/$(propertyId)) &&
+             get(/databases/$(database)/documents/properties/$(propertyId)).data.ownerId == request.auth.uid;
     }
 
     function hasOnlyAllowedFields(fields) {
@@ -152,6 +156,10 @@ service cloud.firestore {
         isAdmin() ||
         (isAuthenticated() && resource.data.ownerId == request.auth.uid && isValidProperty(request.resource.data));
       allow delete: if (isAuthenticated() && resource.data.ownerId == request.auth.uid) || isAdmin();
+    }
+
+    match /test/{docId} {
+      allow read: if true;
     }
     
     // Storage rules are not in this file, but I'll ensure firestore rules are deployed.

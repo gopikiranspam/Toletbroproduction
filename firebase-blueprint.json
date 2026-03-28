@@ -111,6 +111,10 @@
     "/users/{userId}": {
       "schema": "User",
       "description": "Collection of user profiles."
+    },
+    "/test/{docId}": {
+      "schema": "object",
+      "description": "Used for connection testing."
     }
   }
 }

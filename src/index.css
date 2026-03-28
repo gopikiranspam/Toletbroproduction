@@ -157,3 +157,43 @@ body {
   opacity: 0.5;
   filter: blur(4px);
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-board-container, .print-board-container * {
+    visibility: visible;
+  }
+  
+  .print-board-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: black !important;
+    z-index: 9999;
+  }
+
+  /* Ensure borders and text are black for printing */
+  .print-board-container div {
+    border-color: black !important;
+  }
+}

@@ -3,9 +3,11 @@ import { api } from '../services/api';
 import { QRCodeData } from '../types';
 import { QRGenerator } from '../components/QRGenerator';
 import { motion } from 'motion/react';
-import { Plus, Download, LayoutGrid, List, Loader2, Info } from 'lucide-react';
+import { Plus, Download, LayoutGrid, List, Loader2, Info, FileArchive } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 export const AdminQRPanel: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ export const AdminQRPanel: React.FC = () => {
   const [generatedQRs, setGeneratedQRs] = useState<QRCodeData[]>([]);
   const [viewMode, setViewMode] = useState<'GRID' | 'LIST'>('GRID');
   const [generating, setGenerating] = useState(false);
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
 
   const isAdmin = user?.role === 'ADMIN' || user?.email === 'gopikiranspam@gmail.com';
 
@@ -60,6 +63,67 @@ export const AdminQRPanel: React.FC = () => {
       URL.revokeObjectURL(url);
     };
     img.src = url;
+  };
+  
+  const downloadAllAsZip = async () => {
+    if (generatedQRs.length === 0) return;
+    setIsDownloadingZip(true);
+    const zip = new JSZip();
+    
+    try {
+      const promises = generatedQRs.map(async (qr) => {
+        return new Promise<void>((resolve) => {
+          const container = document.getElementById(`qr-container-${qr.qrId}`);
+          const svg = container?.querySelector('svg');
+          if (!svg) {
+            resolve();
+            return;
+          }
+
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          const svgData = new XMLSerializer().serializeToString(svg);
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+
+          img.onload = () => {
+            canvas.width = 1000; // High resolution for ZIP
+            canvas.height = 1000;
+            if (ctx) {
+              ctx.fillStyle = 'white';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              
+              // Convert canvas to blob
+              canvas.toBlob((blob) => {
+                if (blob) {
+                  zip.file(`${qr.qrId}.png`, blob);
+                }
+                URL.revokeObjectURL(url);
+                resolve();
+              }, 'image/png');
+            } else {
+              URL.revokeObjectURL(url);
+              resolve();
+            }
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+          img.src = url;
+        });
+      });
+
+      await Promise.all(promises);
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, `ToLetBro_QRCodes_${new Date().getTime()}.zip`);
+    } catch (error) {
+      console.error('Error generating ZIP:', error);
+    } finally {
+      setIsDownloadingZip(false);
+    }
   };
 
   if (!isAuthReady) {
@@ -126,8 +190,18 @@ export const AdminQRPanel: React.FC = () => {
       </div>
 
       {generatedQRs.length > 0 && (
-        <div className="mb-8 flex items-center justify-between">
-          <p className="text-sm font-medium text-[var(--text-secondary)]">Recently Generated ({generatedQRs.length})</p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <p className="text-sm font-medium text-[var(--text-secondary)]">Recently Generated ({generatedQRs.length})</p>
+            <button 
+              onClick={downloadAllAsZip}
+              disabled={isDownloadingZip}
+              className="flex items-center gap-2 rounded-xl border border-brand/20 bg-brand/5 px-4 py-2 text-sm font-bold text-brand transition-all hover:bg-brand hover:text-black disabled:opacity-50"
+            >
+              {isDownloadingZip ? <Loader2 size={16} className="animate-spin" /> : <FileArchive size={16} />}
+              <span>{isDownloadingZip ? 'Preparing ZIP...' : 'Download All as ZIP'}</span>
+            </button>
+          </div>
           <div className="flex gap-2">
             <button 
               onClick={() => setViewMode('GRID')}

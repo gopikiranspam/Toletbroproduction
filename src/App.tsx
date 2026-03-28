@@ -16,10 +16,10 @@ import { MobileTabs } from './components/MobileTabs';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Loader2, MapPin, Sparkles, Compass, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Property } from './types';
-import { api } from './services/api';
+import { api, testConnection } from './services/api';
 import { mapsService } from './services/mapsService';
 import { FilterModal, FilterState, SortOption } from './components/FilterModal';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, AlertCircle } from 'lucide-react';
 import { useRef } from 'react';
 
 // Pages
@@ -48,6 +48,7 @@ const HomePage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [nearbyProperties, setNearbyProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [viewAllNearby, setViewAllNearby] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -85,7 +86,13 @@ const HomePage = () => {
     const loadData = async () => {
       setLoading(true);
       try {
+        // Test connection first
+        console.log("Testing Firestore connection...");
+        await testConnection();
+        console.log("Connection successful. Fetching properties...");
+        
         const data = await api.getProperties();
+        console.log(`Fetched ${data.length} properties.`);
         setProperties(data);
         
         // Try to get nearby properties on load
@@ -105,6 +112,9 @@ const HomePage = () => {
         }
       } catch (err) {
         console.error("Failed to load properties:", err);
+        if (err instanceof Error && err.message.includes('offline')) {
+          setConnectionError(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -206,6 +216,18 @@ const HomePage = () => {
         description="Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings"
         canonical={window.location.origin}
       />
+      
+      {connectionError && (
+        <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-3">
+          <div className="mx-auto max-w-7xl flex items-center gap-3 text-red-500">
+            <AlertCircle size={18} />
+            <p className="text-sm font-medium">
+              Could not connect to the database. Please ensure Firebase is correctly set up.
+            </p>
+          </div>
+        </div>
+      )}
+
       <Hero />
       <SearchSection onNearbySearch={handleNearbySearch} isNearbyLoading={nearbyLoading} />
 
