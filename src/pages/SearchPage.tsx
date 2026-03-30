@@ -76,11 +76,24 @@ export const SearchPage: React.FC = () => {
     </div>
   );
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `Properties in ${area ? `${area}, ` : ''}${city}`,
+    "description": `Find the best properties for rent in ${area ? `${area}, ` : ''}${city}. Browse ${filteredProperties.length} listings on TOLETBRO.`,
+    "itemListElement": filteredProperties.map((p, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "url": `${window.location.origin}/property/${p.slug || p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${p.id}`
+    }))
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
       <SEO 
-        title={`Properties in ${area ? `${area}, ` : ''}${city}`}
-        description={`Find the best properties for rent in ${area ? `${area}, ` : ''}${city}. Browse ${filteredProperties.length} listings on TOLETBRO.`}
+        title={`Flats for Rent in ${area ? `${area}, ` : ''}${city} | No Brokerage`}
+        description={`Find the best ${area ? `${area}` : city} properties for rent. Browse ${filteredProperties.length} verified listings on TOLETBRO. Smart Tolet Boards for direct owner contact.`}
+        schema={structuredData}
       />
       <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
         <div>

@@ -211,36 +211,54 @@ export const PropertyDetailsPage: React.FC = () => {
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "RealEstateListing",
+    "@type": "Apartment",
     "name": property.title,
     "description": property.description,
     "image": property.images?.[0] || property.imageUrl,
     "url": window.location.href,
     "address": {
       "@type": "PostalAddress",
+      "streetAddress": property.locality || property.area,
       "addressLocality": property.city,
-      "addressRegion": property.area,
+      "addressRegion": property.state || "Telangana",
+      "postalCode": property.pincode || property.zipCode,
       "addressCountry": "IN"
     },
+    "numberOfRooms": property.beds || parseInt(property.bhkType) || 1,
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": property.sqft,
+      "unitCode": "FTK"
+    },
+    "amenityFeature": (property.amenities || []).map(amenity => ({
+      "@type": "LocationFeatureSpecification",
+      "name": amenity,
+      "value": true
+    })),
     "offers": {
       "@type": "Offer",
-      "price": property.rent,
+      "price": property.price,
       "priceCurrency": "INR",
-      "availability": "https://schema.org/InStock"
+      "availability": "https://schema.org/InStock",
+      "url": window.location.href,
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": property.price,
+        "priceCurrency": "INR",
+        "unitCode": "MON"
+      }
     }
   };
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-6 md:py-12 pb-32 md:pb-12">
       <SEO 
-        title={`${property.title} in ${property.area}, ${property.city}`}
-        description={`${property.bhkType} ${property.type} for rent in ${property.area}, ${property.city}. ${property.description.substring(0, 150)}...`}
+        title={`${property.bhkType} ${property.type} for Rent in ${property.area}, ${property.city}`}
+        description={`${property.bhkType} ${property.type} for rent in ${property.area}, ${property.city}. Rent: ₹${property.price}. Direct from owner, no broker. ${property.description.substring(0, 100)}...`}
         ogImage={property.images?.[0] || property.imageUrl}
         ogType="article"
+        schema={structuredData}
       />
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
-      </script>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Left Column: Images & Details */}
         <div className="lg:col-span-2">

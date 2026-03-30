@@ -26,6 +26,17 @@ export const Footer: React.FC = () => {
           </div>
 
           <div>
+            <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Popular Locations</h4>
+            <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
+              <li><Link to="/search/hyderabad/madhapur" className="transition-colors hover:text-brand">Rent in Madhapur</Link></li>
+              <li><Link to="/search/hyderabad/gachibowli" className="transition-colors hover:text-brand">Rent in Gachibowli</Link></li>
+              <li><Link to="/search/hyderabad/kondapur" className="transition-colors hover:text-brand">Rent in Kondapur</Link></li>
+              <li><Link to="/search/hyderabad/kukatpally" className="transition-colors hover:text-brand">Rent in Kukatpally</Link></li>
+              <li><Link to="/search/hyderabad/banjara-hills" className="transition-colors hover:text-brand">Rent in Banjara Hills</Link></li>
+            </ul>
+          </div>
+
+          <div>
             <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Company</h4>
             <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
               <li><Link to="/about-us" className="transition-colors hover:text-brand">About Us</Link></li>

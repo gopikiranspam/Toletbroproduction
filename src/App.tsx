@@ -209,12 +209,36 @@ const HomePage = () => {
     );
   }
 
+  const homeSchema = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "TOLETBRO",
+    "url": "https://toletbro.com",
+    "logo": "https://toletbro.com/favicon.svg",
+    "description": "Smart Tolet Boards & Direct Rentals in Hyderabad. Find flats, apartments, and houses for rent without brokers.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Hyderabad",
+      "addressRegion": "Telangana",
+      "addressCountry": "IN"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "17.3850",
+      "longitude": "78.4867"
+    },
+    "sameAs": [
+      "https://instagram.com/toletbro"
+    ]
+  };
+
   return (
     <main className="pb-20 md:pb-0">
       <SEO 
-        title="TOLETBRO | Smart Tolet Boards & Direct Rentals"
-        description="Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings"
+        title="TOLETBRO | Smart Tolet Boards & Direct Rentals in Hyderabad"
+        description="Find verified flats for rent in Hyderabad without brokers. Scan Smart Tolet Boards to get direct owner contact. No brokerage, direct rentals."
         canonical={window.location.origin}
+        schema={homeSchema}
       />
       
       {connectionError && (

@@ -8,6 +8,7 @@ interface SEOProps {
   ogType?: string;
   ogImage?: string;
   twitterCard?: string;
+  schema?: object;
 }
 
 export const SEO: React.FC<SEOProps> = ({
@@ -17,6 +18,7 @@ export const SEO: React.FC<SEOProps> = ({
   ogType = 'website',
   ogImage = 'https://images.unsplash.com/photo-1600585154340-be6199f7d009?auto=format&fit=crop&q=80&w=1000',
   twitterCard = 'summary_large_image',
+  schema,
 }) => {
   const siteTitle = title.includes('TOLETBRO') ? title : `${title} | TOLETBRO`;
 
@@ -44,6 +46,13 @@ export const SEO: React.FC<SEOProps> = ({
       <meta name="robots" content="index, follow" />
       <meta name="googlebot" content="index, follow" />
       <meta name="theme-color" content="#10b981" />
+
+      {/* Structured Data */}
+      {schema && (
+        <script type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      )}
     </Helmet>
   );
 };
