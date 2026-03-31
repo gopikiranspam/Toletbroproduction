@@ -1,5 +1,5 @@
 {
   "name": "TOLETBRO",
-  "description": "Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings",
+  "description": "Find houses for rent near you without broker. We invented smart tolet boards, Just Scan QR to view all nearby To-Let properties instantly.",
   "requestFramePermissions": ["camera", "geolocation"]
 }

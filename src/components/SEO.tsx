@@ -13,7 +13,7 @@ interface SEOProps {
 
 export const SEO: React.FC<SEOProps> = ({
   title = 'TOLETBRO | Smart Tolet Boards & Direct Rentals',
-  description = 'Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings',
+  description = 'Find houses for rent near you without broker. We invented smart tolet boards, Just Scan QR to view all nearby To-Let properties instantly.',
   canonical,
   ogType = 'website',
   ogImage = 'https://images.unsplash.com/photo-1600585154340-be6199f7d009?auto=format&fit=crop&q=80&w=1000',

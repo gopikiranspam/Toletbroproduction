@@ -15,7 +15,7 @@ export const Footer: React.FC = () => {
               <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">TOLETBRO</span>
             </div>
             <p className="mb-6 text-sm text-[var(--text-secondary)] leading-relaxed">
-              Find the nearest, rent house and we invented smart tolet boards to eliminates fake and broker listings
+              Find houses for rent near you without broker. We invented smart tolet boards, Just Scan QR to view all nearby To-Let properties instantly.
             </p>
             <div className="flex gap-4">
               <a href="https://instagram.com/gopikiran1811" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Instagram size={20} /></a>
