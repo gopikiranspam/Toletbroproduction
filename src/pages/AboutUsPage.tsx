@@ -63,11 +63,34 @@ export const AboutUsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="bg-black text-white rounded-[3rem] p-16 space-y-6">
-              <h2 className="text-4xl font-bold tracking-tight italic">Our Vision</h2>
-              <p className="text-2xl leading-relaxed opacity-90">
-                To transform traditional To-Let boards into smart digital tools that improve the rental experience for everyone.
-              </p>
+            <section className="bg-black text-white rounded-[3rem] p-16 space-y-12">
+              <div className="space-y-6">
+                <h2 className="text-4xl font-bold tracking-tight italic">Our Vision</h2>
+                <p className="text-2xl leading-relaxed opacity-90">
+                  To transform traditional To-Let boards into smart digital tools that improve the rental experience for everyone.
+                </p>
+              </div>
+
+              <div className="pt-12 border-t border-white/20 space-y-8">
+                <h3 className="text-2xl font-bold uppercase tracking-widest text-brand">Our Products & Services</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-bold">Smart Tolet Boards</h4>
+                    <p className="text-sm opacity-80">Physical QR-enabled boards for property visibility. Just scan to view details.</p>
+                    <p className="text-brand font-bold">₹499 - ₹999</p>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-bold">Promote Option</h4>
+                    <p className="text-sm opacity-80">Featured listing services to increase property visibility to more tenants.</p>
+                    <p className="text-brand font-bold">₹199 - ₹499</p>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-bold">Premium Features</h4>
+                    <p className="text-sm opacity-80">Advanced dashboard tools, analytics, and priority support for owners.</p>
+                    <p className="text-brand font-bold">₹99 - ₹299 / mo</p>
+                  </div>
+                </div>
+              </div>
             </section>
           </div>
 
@@ -92,18 +115,47 @@ export const AboutUsPage: React.FC = () => {
                 We introduced <span className="font-bold text-black">Smart To-Let Boards with QR codes</span> — where tenants can simply scan and view full property details before calling. This saves time, reduces unnecessary calls, and connects only serious tenants with owners.
               </p>
 
-              <div className="bg-gray-50 p-8 rounded-3xl space-y-4">
-                <p className="font-bold">
-                  We don’t call ourselves “NoBroker” like others who still charge like brokers.
-                </p>
-                <p className="text-gray-600">
-                  We built this to help struggling tenants in metropolitan cities — with very minimal charges.
-                </p>
+              <div className="bg-gray-50 p-8 rounded-3xl space-y-8">
+                <div className="space-y-4">
+                  <p className="font-bold">
+                    We don’t call ourselves “NoBroker” like others who still charge like brokers.
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    We built this to help struggling tenants in metropolitan cities — with very minimal charges.
+                  </p>
+                </div>
+
+                <div className="pt-8 border-t border-black/5 space-y-6">
+                  <h4 className="font-bold uppercase tracking-widest text-xs text-gray-400">Products & Services</h4>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <p className="font-bold text-sm">Smart Tolet Boards</p>
+                        <p className="text-xs text-gray-500">Physical QR Boards</p>
+                      </div>
+                      <p className="text-brand font-bold text-sm">₹499+</p>
+                    </div>
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <p className="font-bold text-sm">Promote Option</p>
+                        <p className="text-xs text-gray-500">Featured Listings</p>
+                      </div>
+                      <p className="text-brand font-bold text-sm">₹199+</p>
+                    </div>
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <p className="font-bold text-sm">Premium Features</p>
+                        <p className="text-xs text-gray-500">Advanced Tools</p>
+                      </div>
+                      <p className="text-brand font-bold text-sm">₹99/mo</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="text-center pt-8">
                 <p className="text-3xl font-bold tracking-tighter italic">Scan. See. Decide.</p>
-                <p className="mt-4 font-bold">— Gopikiran Cherukupally</p>
+                <p className="mt-4 font-bold">— ToletBro Team</p>
               </div>
             </section>
           </div>
@@ -113,26 +165,24 @@ export const AboutUsPage: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-12 items-start">
               <div className="space-y-6 flex-1">
                 <div>
-                  <p className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-2">Founder</p>
+                  <p className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-2">Company & Founder</p>
                   <h3 className="text-3xl font-bold tracking-tight md:text-4xl">Gopikiran Cherukupally</h3>
                 </div>
                 
                 <div className="space-y-4">
                   <a 
-                    href="https://instagram.com/gopikiran1811" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                    href="tel:+918500482405" 
                     className="flex items-center gap-3 text-lg font-medium hover:underline md:text-xl"
                   >
-                    <Instagram size={24} />
-                    <span>@gopikiran1811</span>
+                    <Users size={24} />
+                    <span>+91 8500482405</span>
                   </a>
                   <a 
-                    href="mailto:gopikiran1811@gmail.com" 
+                    href="mailto:support@toletbro.com" 
                     className="flex items-center gap-3 text-lg font-medium hover:underline md:text-xl"
                   >
                     <Mail size={24} />
-                    <span>gopikiran1811@gmail.com</span>
+                    <span>support@toletbro.com</span>
                   </a>
                 </div>
               </div>

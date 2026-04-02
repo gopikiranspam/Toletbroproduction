@@ -18,10 +18,7 @@ export const Footer: React.FC = () => {
               Find houses for rent near you without broker. We invented smart tolet boards, Just Scan QR to view all nearby To-Let properties instantly.
             </p>
             <div className="flex gap-4">
-              <a href="https://instagram.com/gopikiran1811" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Instagram size={20} /></a>
-              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Twitter size={20} /></a>
-              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Facebook size={20} /></a>
-              <a href="#" className="text-[var(--text-secondary)] transition-colors hover:text-brand"><Linkedin size={20} /></a>
+              {/* Social media links removed as per request */}
             </div>
           </div>
 
@@ -49,10 +46,12 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Support</h4>
             <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
-              <li><a href="#" className="transition-colors hover:text-brand">Help Center</a></li>
-              <li><Link to="/terms-of-service" className="transition-colors hover:text-brand">Terms of Service</Link></li>
+              <li><Link to="/about-us" className="transition-colors hover:text-brand">About Us</Link></li>
+              <li><Link to="/terms-of-service" className="transition-colors hover:text-brand">Terms & Conditions</Link></li>
               <li><Link to="/privacy-policy" className="transition-colors hover:text-brand">Privacy Policy</Link></li>
-              <li><a href="#" className="transition-colors hover:text-brand">FAQ</a></li>
+              <li><Link to="/refund-policy" className="transition-colors hover:text-brand">Return & Refund</Link></li>
+              <li><Link to="/cancellation-policy" className="transition-colors hover:text-brand">Cancellation Policy</Link></li>
+              <li><Link to="/shipping-policy" className="transition-colors hover:text-brand">Shipping Policy</Link></li>
               <li><Link to="/admin/qr" className="transition-colors hover:text-brand">Admin Panel</Link></li>
             </ul>
           </div>
@@ -73,7 +72,14 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="mt-20 border-t border-[var(--border)] pt-10 text-center text-xs text-[var(--text-secondary)]/70">
-          <p>© 2026 TOLETBRO. All rights reserved.</p>
+          <p className="mb-4">© 2026 TOLETBRO. All rights reserved.</p>
+          <div className="space-y-2">
+            <p><strong>Legal Name:</strong> ToletBro Technologies</p>
+            <p><strong>Trade Name:</strong> TOLETBRO</p>
+            <p><strong>Registered Address:</strong> Plot No.34, Central Bank Colony, LB Nagar, Hyderabad, Telangana, Pin code : 500074.</p>
+            <p><strong>Email:</strong> support@toletbro.com</p>
+            <p><strong>Phone:</strong> +91 8500482405</p>
+          </div>
         </div>
       </div>
     </footer>

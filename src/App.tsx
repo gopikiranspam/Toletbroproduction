@@ -213,23 +213,29 @@ const HomePage = () => {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "TOLETBRO",
+    "legalName": "ToletBro Technologies",
     "url": "https://toletbro.com",
     "logo": "https://toletbro.com/favicon.svg",
     "description": "Find houses for rent near you without broker. We invented smart tolet boards, Just Scan QR to view all nearby To-Let properties instantly.",
     "address": {
       "@type": "PostalAddress",
+      "streetAddress": "Plot No.34, Central Bank Colony, LB Nagar",
       "addressLocality": "Hyderabad",
       "addressRegion": "Telangana",
+      "postalCode": "500074",
       "addressCountry": "IN"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-8500482405",
+      "contactType": "customer service",
+      "email": "support@toletbro.com"
     },
     "geo": {
       "@type": "GeoCoordinates",
       "latitude": "17.3850",
       "longitude": "78.4867"
-    },
-    "sameAs": [
-      "https://instagram.com/toletbro"
-    ]
+    }
   };
 
   return (
@@ -590,6 +596,9 @@ const router = createBrowserRouter([
       { path: "/about-us", element: <AboutUsPage /> },
       { path: "/privacy-policy", element: <LegalPage type="privacy" /> },
       { path: "/terms-of-service", element: <LegalPage type="terms" /> },
+      { path: "/refund-policy", element: <LegalPage type="refund" /> },
+      { path: "/cancellation-policy", element: <LegalPage type="cancellation" /> },
+      { path: "/shipping-policy", element: <LegalPage type="shipping" /> },
     ]
   }
 ]);
