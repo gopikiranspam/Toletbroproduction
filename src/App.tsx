@@ -42,6 +42,9 @@ import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from './components/SEO';
 import { LegalPage } from './pages/LegalPage';
 import { AboutUsPage } from './pages/AboutUsPage';
+import { SlideDetailPage } from './pages/SlideDetailPage';
+import { CheckoutPage } from './pages/CheckoutPage';
+import { AdminSlidesPanel } from './pages/AdminSlidesPanel';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -589,11 +592,14 @@ const router = createBrowserRouter([
       { path: "/dashboard/qr", element: <OwnerQRDashboard /> },
       { path: "/favorites", element: <FavoritesPage /> },
       { path: "/admin/qr", element: <AdminQRPanel /> },
+      { path: "/admin/slides", element: <AdminSlidesPanel /> },
       { path: "/scan", element: <ScannerPage /> },
       { path: "/profile", element: <ProfilePage /> },
       { path: "/privacy-controls", element: <PrivacyPage /> },
       { path: "/list-property", element: <ListProperty /> },
       { path: "/about-us", element: <AboutUsPage /> },
+      { path: "/offer/:slideId", element: <SlideDetailPage /> },
+      { path: "/checkout/:planId", element: <CheckoutPage /> },
       { path: "/privacy-policy", element: <LegalPage type="privacy" /> },
       { path: "/terms-of-service", element: <LegalPage type="terms" /> },
       { path: "/refund-policy", element: <LegalPage type="refund" /> },

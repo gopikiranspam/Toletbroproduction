@@ -13,7 +13,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Property, QRCodeData, Owner, OperationType } from '../types';
+import { Property, QRCodeData, Owner, OperationType, Slide } from '../types';
 import { safeLog, safeStringify } from '../utils/logger';
 
 // Error handler for Firestore permissions
@@ -410,5 +410,61 @@ export const api = {
       console.error("Failed to toggle favorite:", error);
       return false;
     }
-  }
+  },
+
+  // Slide APIs
+  getSlides: async (onlyActive: boolean = true): Promise<Slide[]> => {
+    const path = 'slides';
+    try {
+      const snapshot = await getDocs(collection(db, path));
+      let slides = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Slide));
+      if (onlyActive) {
+        slides = slides.filter(s => s.isActive);
+      }
+      return slides.sort((a, b) => a.order - b.order);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  },
+
+  createSlide: async (slideData: Omit<Slide, 'id' | 'createdAt'>): Promise<string> => {
+    const path = 'slides';
+    try {
+      const slideId = `slide-${Date.now()}`;
+      const docRef = doc(db, 'slides', slideId);
+      await setDoc(docRef, {
+        ...slideData,
+        createdAt: new Date().toISOString()
+      });
+      return slideId;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, path);
+      throw error;
+    }
+  },
+
+  updateSlide: async (id: string, slideData: Partial<Slide>): Promise<boolean> => {
+    const path = `slides/${id}`;
+    try {
+      const docRef = doc(db, 'slides', id);
+      await updateDoc(docRef, slideData);
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+      return false;
+    }
+  },
+
+  deleteSlide: async (id: string): Promise<boolean> => {
+    const path = `slides/${id}`;
+    try {
+      const docRef = doc(db, 'slides', id);
+      await updateDoc(docRef, { isActive: false }); // Soft delete for now
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+      return false;
+    }
+  },
 };

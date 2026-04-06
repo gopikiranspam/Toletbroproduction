@@ -21,13 +21,15 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { Property } from '../types';
+import { Property, Slide } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { Slideshow } from '../components/Slideshow';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; propertyId: string | null }>({
     isOpen: false,
@@ -41,20 +43,67 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
-      loadProperties();
+      loadData();
     }
   }, [user]);
 
-  const handleQrClick = (property: Property) => {
-    setQrModal({ isOpen: true, property });
-  };
-
-  const loadProperties = async () => {
+  const loadData = async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const data = await api.getPropertiesByOwnerId(user.id, true);
-      setProperties(data);
+      const [propsData, slidesData] = await Promise.all([
+        api.getPropertiesByOwnerId(user.id, true),
+        api.getSlides(true)
+      ]);
+      setProperties(propsData);
+      
+      // If no slides exist, create default ones (only for demo/initial setup)
+      if (slidesData.length === 0) {
+        const defaultSlides: Omit<Slide, 'id' | 'createdAt'>[] = [
+          {
+            title: "Order Smart Tolet Board",
+            subtitle: "Limited Time Offer",
+            description: "Get your smart QR board today with exclusive discounts. Professional marketing for your property.",
+            imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1000",
+            buttonText: "Order Now",
+            link: "/offer/smart-board",
+            actionLink: "/checkout/smart-board",
+            offerText: "20% OFF TODAY",
+            isActive: true,
+            order: 1
+          },
+          {
+            title: "Promote for just ₹49",
+            subtitle: "Boost Visibility",
+            description: "Get your property in front of thousands of potential tenants instantly. First promotion at just ₹49.",
+            imageUrl: "https://images.unsplash.com/photo-1582408921715-18e7806365c1?auto=format&fit=crop&q=80&w=1000",
+            buttonText: "Promote Now",
+            link: "/offer/promotion",
+            actionLink: "/checkout/promotion",
+            offerText: "₹49 ONLY",
+            isActive: true,
+            order: 2
+          },
+          {
+            title: "Privacy & Unlimited Posts",
+            subtitle: "Premium Features",
+            description: "Take Smart Tolet Board + Privacy features + Free promotion + Unlimited posts. The ultimate package.",
+            imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1000",
+            buttonText: "Go Premium",
+            link: "/offer/premium",
+            actionLink: "/checkout/premium",
+            offerText: "BEST VALUE",
+            isActive: true,
+            order: 3
+          }
+        ];
+        
+        // Only admin should really do this, but for demo we'll seed them
+        // In a real app, we'd have a seeding script or admin UI
+        setSlides(defaultSlides.map((s, i) => ({ ...s, id: `seed-${i}`, createdAt: new Date().toISOString() })));
+      } else {
+        setSlides(slidesData);
+      }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
@@ -62,14 +111,18 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleQrClick = (property: Property) => {
+    setQrModal({ isOpen: true, property });
+  };
+
   const handleToggleOccupied = async (property: Property) => {
     const success = await api.updateProperty(property.id, { isOccupied: !property.isOccupied });
-    if (success) loadProperties();
+    if (success) loadData();
   };
 
   const handleToggleActive = async (property: Property) => {
     const success = await api.updateProperty(property.id, { isActive: !property.isActive });
-    if (success) loadProperties();
+    if (success) loadData();
   };
 
   const handleDeleteClick = (id: string) => {
@@ -80,7 +133,7 @@ export const Dashboard: React.FC = () => {
     if (deleteModal.propertyId) {
       await api.deleteProperty(deleteModal.propertyId);
       setDeleteModal({ isOpen: false, propertyId: null });
-      loadProperties();
+      loadData();
     }
   };
 
@@ -121,6 +174,13 @@ export const Dashboard: React.FC = () => {
             Add New Property
           </button>
         </div>
+
+        {/* Slideshow Section */}
+        {slides.length > 0 && (
+          <section className="mx-auto max-w-4xl">
+            <Slideshow slides={slides} />
+          </section>
+        )}
 
           {/* Insights Section */}
           <section className="space-y-6">

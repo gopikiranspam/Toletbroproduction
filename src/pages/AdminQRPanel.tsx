@@ -167,6 +167,15 @@ export const AdminQRPanel: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">Admin QR Generator</h1>
           <p className="mt-2 text-[var(--text-secondary)]">Bulk generate Smart Tolet Board QR codes for distribution.</p>
+          <div className="mt-4 flex gap-4">
+            <button 
+              onClick={() => navigate('/admin/slides')}
+              className="flex items-center gap-2 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] px-4 py-2 text-xs font-bold text-[var(--text-primary)] transition-all hover:border-brand hover:text-brand"
+            >
+              <LayoutGrid size={16} />
+              Manage Slides
+            </button>
+          </div>
         </div>
         
         <div className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-2">

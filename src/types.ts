@@ -128,3 +128,18 @@ export interface QRCodeData {
   createdAt: string;
   publicUrl?: string;
 }
+
+export interface Slide {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  imageUrl: string;
+  buttonText: string;
+  link: string;
+  actionLink: string;
+  offerText?: string;
+  isActive: boolean;
+  order: number;
+  createdAt: string;
+}
