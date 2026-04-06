@@ -51,10 +51,15 @@ const handleFirestoreError = (error: unknown, operationType: OperationType, path
 // Test connection to Firestore
 export const testConnection = async () => {
   try {
+    console.log("Attempting to reach Firestore...");
     await getDocFromServer(doc(db, 'test', 'connection'));
+    console.log("Firestore reachability test passed.");
   } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Firestore connection test failed:", errorMessage);
+    
+    if(errorMessage.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration. The SDK reports the client is offline.");
       throw new Error('offline');
     }
     // Re-throw other errors

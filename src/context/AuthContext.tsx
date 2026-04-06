@@ -14,8 +14,17 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+import firebaseConfigJson from '../../firebase-applet-config.json';
 import { User, UserRole } from '../types';
+
+// Use environment variables if available, otherwise fallback to config file
+const firebaseConfig = {
+  apiKey: (process.env as any).VITE_FIREBASE_API_KEY || firebaseConfigJson.apiKey,
+  authDomain: (process.env as any).VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigJson.authDomain,
+  projectId: (process.env as any).VITE_FIREBASE_PROJECT_ID || firebaseConfigJson.projectId,
+  appId: (process.env as any).VITE_FIREBASE_APP_ID || firebaseConfigJson.appId
+};
+
 import { safeLog } from '../utils/logger';
 import { api } from '../services/api';
 

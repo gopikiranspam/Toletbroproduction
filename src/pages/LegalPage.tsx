@@ -81,13 +81,30 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
                 </section>
 
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-bold text-black md:text-3xl">3. Property Listings</h2>
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">3. Disclaimer</h2>
+                  <p>The materials on {tradeName}'s website are provided on an 'as is' basis. {tradeName} makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+                </section>
+
+                <section className="space-y-6">
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">4. Property Listings</h2>
                   <p>Property owners are solely responsible for the accuracy and legality of their listings. {tradeName} does not verify the ownership of properties or the truthfulness of descriptions. Users are advised to perform their own due diligence before entering into any rental agreement.</p>
                   <p>Fake listings, duplicate listings, or listings with misleading information will be removed without notice, and the user account may be suspended.</p>
                 </section>
 
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-bold text-black md:text-3xl">4. Products and Services</h2>
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">5. Prohibited Activities</h2>
+                  <p>You agree not to engage in any of the following prohibited activities:</p>
+                  <ul className="list-inside list-disc space-y-4 marker:text-black">
+                    <li>Copying, distributing, or disclosing any part of the Service in any medium.</li>
+                    <li>Using any automated system, including "robots," "spiders," or "offline readers," to access the Service.</li>
+                    <li>Attempting to interfere with, compromise the system integrity or security, or decipher any transmissions to or from the servers running the Service.</li>
+                    <li>Taking any action that imposes an unreasonable or disproportionately large load on our infrastructure.</li>
+                    <li>Uploading invalid data, viruses, worms, or other software agents through the Service.</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-6">
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">6. Products and Services</h2>
                   <p>We offer various products and services including:</p>
                   <ul className="list-inside list-disc space-y-4 marker:text-black">
                     <li><strong>Smart Tolet Boards:</strong> Physical QR-enabled boards for property visibility. Price: ₹499 - ₹999 (inclusive of taxes).</li>
@@ -98,12 +115,12 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
                 </section>
 
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-bold text-black md:text-3xl">5. Limitation of Liability</h2>
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">7. Limitation of Liability</h2>
                   <p>In no event shall {tradeName} or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on {tradeName}'s website.</p>
                 </section>
 
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-bold text-black md:text-3xl">6. Governing Law</h2>
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">8. Governing Law</h2>
                   <p>These terms and conditions are governed by and construed in accordance with the laws of India and you irrevocably submit to the exclusive jurisdiction of the courts in Hyderabad, Telangana.</p>
                 </section>
               </>
@@ -143,12 +160,24 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
                 </section>
 
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-bold text-black md:text-3xl">4. Data Security</h2>
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">4. Cookies and Tracking Technologies</h2>
+                  <p>We use cookies and similar tracking technologies to track the activity on our Service and hold certain information. Cookies are files with a small amount of data which may include an anonymous unique identifier. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.</p>
+                  <p>We use cookies for various purposes, including:</p>
+                  <ul className="list-inside list-disc space-y-4 marker:text-black">
+                    <li><strong>Essential Cookies:</strong> Necessary for the operation of our platform.</li>
+                    <li><strong>Analytics Cookies:</strong> To understand how users interact with our site.</li>
+                    <li><strong>Advertising Cookies:</strong> We use third-party vendors, including Google, who use cookies to serve ads based on a user's prior visits to our website or other websites.</li>
+                  </ul>
+                  <p>Google's use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our site and/or other sites on the Internet. Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="text-brand underline">Google Ads Settings</a>. Alternatively, you can opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="http://www.aboutads.info" target="_blank" rel="noopener noreferrer" className="text-brand underline">www.aboutads.info</a>.</p>
+                </section>
+
+                <section className="space-y-6">
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">5. Data Security</h2>
                   <p>The security of your data is important to us, but remember that no method of transmission over the Internet, or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your Personal Data, we cannot guarantee its absolute security.</p>
                 </section>
 
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-bold text-black md:text-3xl">5. Your Data Rights</h2>
+                  <h2 className="text-2xl font-bold text-black md:text-3xl">6. Your Data Rights</h2>
                   <p>Under Indian data protection laws, you have the right to access, update, or delete the information we have on you. You can perform these actions within your account settings or by contacting us.</p>
                 </section>
               </>

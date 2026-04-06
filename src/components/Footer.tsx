@@ -37,9 +37,9 @@ export const Footer: React.FC = () => {
             <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Company</h4>
             <ul className="space-y-4 text-sm text-[var(--text-secondary)]">
               <li><Link to="/about-us" className="transition-colors hover:text-brand">About Us</Link></li>
-              <li><a href="#" className="transition-colors hover:text-brand">Our Team</a></li>
-              <li><a href="#" className="transition-colors hover:text-brand">Careers</a></li>
-              <li><a href="#" className="transition-colors hover:text-brand">Contact</a></li>
+              <li><Link to="/about-us" className="transition-colors hover:text-brand">Our Team</Link></li>
+              <li><Link to="/about-us" className="transition-colors hover:text-brand">Careers</Link></li>
+              <li><Link to="/about-us#contact" className="transition-colors hover:text-brand">Contact</Link></li>
             </ul>
           </div>
 

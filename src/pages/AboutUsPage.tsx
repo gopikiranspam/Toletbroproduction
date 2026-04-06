@@ -161,7 +161,7 @@ export const AboutUsPage: React.FC = () => {
           </div>
 
           {/* Common Founder Section */}
-          <section className="pt-20 border-t border-black">
+          <section id="contact" className="pt-20 border-t border-black">
             <div className="flex flex-col md:flex-row gap-12 items-start">
               <div className="space-y-6 flex-1">
                 <div>
