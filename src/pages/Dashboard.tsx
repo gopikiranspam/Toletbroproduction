@@ -5,6 +5,7 @@ import {
   Heart, 
   Share2, 
   Phone, 
+  PhoneCall,
   MessageSquare, 
   QrCode, 
   Settings, 
@@ -16,20 +17,21 @@ import {
   AlertTriangle,
   Loader2,
   ChevronRight,
-  Plus
+  Plus,
+  Sparkles,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { Property, Slide } from '../types';
+import { Property } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { Slideshow } from '../components/Slideshow';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
-  const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; propertyId: string | null }>({
     isOpen: false,
@@ -43,67 +45,20 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
-      loadData();
+      loadProperties();
     }
   }, [user]);
 
-  const loadData = async () => {
+  const handleQrClick = (property: Property) => {
+    setQrModal({ isOpen: true, property });
+  };
+
+  const loadProperties = async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const [propsData, slidesData] = await Promise.all([
-        api.getPropertiesByOwnerId(user.id, true),
-        api.getSlides(true)
-      ]);
-      setProperties(propsData);
-      
-      // If no slides exist, create default ones (only for demo/initial setup)
-      if (slidesData.length === 0) {
-        const defaultSlides: Omit<Slide, 'id' | 'createdAt'>[] = [
-          {
-            title: "Order Smart Tolet Board",
-            subtitle: "Limited Time Offer",
-            description: "Get your smart QR board today with exclusive discounts. Professional marketing for your property.",
-            imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1000",
-            buttonText: "Order Now",
-            link: "/offer/smart-board",
-            actionLink: "/checkout/smart-board",
-            offerText: "20% OFF TODAY",
-            isActive: true,
-            order: 1
-          },
-          {
-            title: "Promote for just ₹49",
-            subtitle: "Boost Visibility",
-            description: "Get your property in front of thousands of potential tenants instantly. First promotion at just ₹49.",
-            imageUrl: "https://images.unsplash.com/photo-1582408921715-18e7806365c1?auto=format&fit=crop&q=80&w=1000",
-            buttonText: "Promote Now",
-            link: "/offer/promotion",
-            actionLink: "/checkout/promotion",
-            offerText: "₹49 ONLY",
-            isActive: true,
-            order: 2
-          },
-          {
-            title: "Privacy & Unlimited Posts",
-            subtitle: "Premium Features",
-            description: "Take Smart Tolet Board + Privacy features + Free promotion + Unlimited posts. The ultimate package.",
-            imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1000",
-            buttonText: "Go Premium",
-            link: "/offer/premium",
-            actionLink: "/checkout/premium",
-            offerText: "BEST VALUE",
-            isActive: true,
-            order: 3
-          }
-        ];
-        
-        // Only admin should really do this, but for demo we'll seed them
-        // In a real app, we'd have a seeding script or admin UI
-        setSlides(defaultSlides.map((s, i) => ({ ...s, id: `seed-${i}`, createdAt: new Date().toISOString() })));
-      } else {
-        setSlides(slidesData);
-      }
+      const data = await api.getPropertiesByOwnerId(user.id, true);
+      setProperties(data);
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
@@ -111,18 +66,14 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleQrClick = (property: Property) => {
-    setQrModal({ isOpen: true, property });
-  };
-
   const handleToggleOccupied = async (property: Property) => {
     const success = await api.updateProperty(property.id, { isOccupied: !property.isOccupied });
-    if (success) loadData();
+    if (success) loadProperties();
   };
 
   const handleToggleActive = async (property: Property) => {
     const success = await api.updateProperty(property.id, { isActive: !property.isActive });
-    if (success) loadData();
+    if (success) loadProperties();
   };
 
   const handleDeleteClick = (id: string) => {
@@ -133,7 +84,7 @@ export const Dashboard: React.FC = () => {
     if (deleteModal.propertyId) {
       await api.deleteProperty(deleteModal.propertyId);
       setDeleteModal({ isOpen: false, propertyId: null });
-      loadData();
+      loadProperties();
     }
   };
 
@@ -156,31 +107,60 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pb-32 pt-24 px-6">
-      <div className="mx-auto max-w-7xl space-y-12">
-        {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] md:text-5xl">
-              Owner <span className="text-brand">Dashboard</span>
-            </h1>
-            <p className="mt-2 text-[var(--text-secondary)]">Manage your properties and track performance insights.</p>
-          </div>
+    <div className="min-h-screen bg-[var(--bg)] pb-32 pt-12 px-6">
+      <div className="mx-auto max-w-7xl space-y-8">
+        {/* Quick Actions Header */}
+        <div className="flex justify-center md:justify-end">
           <button 
             onClick={() => navigate('/list-property')}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-3 text-sm font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-105"
+            className="flex w-full md:w-auto items-center justify-center gap-2 rounded-2xl bg-brand px-8 py-3 md:py-4 text-sm font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-105 active:scale-95"
           >
-            <Plus size={18} />
+            <Plus size={18} className="md:w-5 md:h-5" />
             Add New Property
           </button>
         </div>
 
-        {/* Slideshow Section */}
-        {slides.length > 0 && (
-          <section className="mx-auto max-w-4xl">
-            <Slideshow slides={slides} />
-          </section>
-        )}
+        {/* Smart Tolet Board Order Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-[2.5rem] border border-brand/30 bg-gradient-to-br from-brand/10 via-transparent to-brand/5 p-8 shadow-xl shadow-brand/5"
+        >
+          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-6">
+              <h3 className="text-3xl font-bold text-[var(--text-primary)]">Why <span className="text-brand">Smart Tolet Board?</span></h3>
+              
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-[var(--text-secondary)]">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-brand" />
+                  <span>Hide your number & avoid unnecessary calls</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <BarChart3 size={16} className="text-brand" />
+                  <span>See how many people viewed your property</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PhoneCall size={16} className="text-brand" />
+                  <span>Get only interested tenants calling you</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Zap size={16} className="text-brand" />
+                  <span>Promote your listing & get tenants faster</span>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/order-board')}
+              className="group flex h-14 items-center justify-center gap-3 rounded-2xl bg-brand px-10 text-base font-bold text-black shadow-lg shadow-brand/20 transition-all hover:scale-105 active:scale-95"
+            >
+              Order Now
+              <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+          {/* Decorative background elements */}
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-brand/5 blur-2xl" />
+        </motion.div>
 
           {/* Insights Section */}
           <section className="space-y-6">
