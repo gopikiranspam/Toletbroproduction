@@ -18,11 +18,13 @@ import firebaseConfigJson from '../../firebase-applet-config.json';
 import { User, UserRole } from '../types';
 
 // Use environment variables if available, otherwise fallback to config file
+const isPlaceholder = (val: string | undefined) => !val || val.startsWith('YOUR_') || val === 'undefined' || val === '';
+
 const firebaseConfig = {
-  apiKey: (process.env as any).VITE_FIREBASE_API_KEY || firebaseConfigJson.apiKey,
-  authDomain: (process.env as any).VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigJson.authDomain,
-  projectId: (process.env as any).VITE_FIREBASE_PROJECT_ID || firebaseConfigJson.projectId,
-  appId: (process.env as any).VITE_FIREBASE_APP_ID || firebaseConfigJson.appId
+  apiKey: !isPlaceholder((process.env as any).VITE_FIREBASE_API_KEY) ? (process.env as any).VITE_FIREBASE_API_KEY : firebaseConfigJson.apiKey,
+  authDomain: !isPlaceholder((process.env as any).VITE_FIREBASE_AUTH_DOMAIN) ? (process.env as any).VITE_FIREBASE_AUTH_DOMAIN : firebaseConfigJson.authDomain,
+  projectId: !isPlaceholder((process.env as any).VITE_FIREBASE_PROJECT_ID) ? (process.env as any).VITE_FIREBASE_PROJECT_ID : firebaseConfigJson.projectId,
+  appId: !isPlaceholder((process.env as any).VITE_FIREBASE_APP_ID) ? (process.env as any).VITE_FIREBASE_APP_ID : firebaseConfigJson.appId
 };
 
 import { safeLog } from '../utils/logger';
@@ -149,8 +151,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // If already initialized, don't do it again unless it's a different container
     if (isRecaptchaInitialized.current && recaptchaVerifier) {
       safeLog.log('Recaptcha already initialized, skipping setup');
-      return;
+      return recaptchaVerifier;
     }
+
+    const checkConfig = () => {
+      safeLog.log('DEEP DIVE: Firebase Config Check:', {
+        projectId: firebaseConfig.projectId,
+        authDomain: firebaseConfig.authDomain,
+        apiKey: firebaseConfig.apiKey ? 'Present (starts with ' + firebaseConfig.apiKey.substring(0, 5) + '...)' : 'MISSING',
+        appId: firebaseConfig.appId ? 'Present' : 'MISSING',
+        actualAuthConfig: {
+          apiKey: auth.config.apiKey ? 'Present' : 'MISSING',
+          authDomain: auth.config.authDomain
+        }
+      });
+    };
 
     safeLog.log('DEEP DIVE: Initializing RecaptchaVerifier with:', typeof containerOrId === 'string' ? containerOrId : 'HTMLElement');
     safeLog.log('Auth Domain:', auth.config.authDomain);
@@ -162,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const el = document.getElementById(containerOrId);
         if (!el) {
           safeLog.error(`Element with ID "${containerOrId}" not found in DOM`);
-          return;
+          return null;
         }
         el.innerHTML = ''; // Clear it
       } else {
@@ -200,9 +215,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       verifier.render().then((widgetId) => {
         safeLog.log('Recaptcha rendered successfully with widgetId:', widgetId);
         isRecaptchaInitialized.current = true;
+        setRecaptchaVerifier(verifier);
       }).catch((err) => {
         safeLog.error('Recaptcha render failed with error:', err);
         isRecaptchaInitialized.current = false;
+        checkConfig();
         
         // Detailed deep-dive logging for internal-error
         if (err.code === 'auth/internal-error' || err.message?.includes('internal-error')) {
@@ -213,12 +230,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           safeLog.error('3. Authorized Domains: https://console.firebase.google.com/project/_/authentication/settings');
           safeLog.error('4. Current Domain: ' + window.location.hostname);
         }
+        setRecaptchaVerifier(null);
       });
 
-      setRecaptchaVerifier(verifier);
+      return verifier;
     } catch (error: any) {
       safeLog.error('Error setting up recaptcha:', error);
       isRecaptchaInitialized.current = false;
+      checkConfig();
+      return null;
     }
   };
 
@@ -236,13 +256,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const sendOtp = async (phoneNumber: string) => {
-    if (!recaptchaVerifier) {
-      safeLog.error('Recaptcha not initialized when calling sendOtp');
-      throw new Error('Recaptcha not initialized. Please try again.');
+    safeLog.log('Sending OTP to:', phoneNumber);
+    
+    let currentVerifier = recaptchaVerifier;
+    if (!currentVerifier) {
+      safeLog.error('Recaptcha not initialized. Attempting re-initialization...');
+      currentVerifier = setupRecaptcha('recaptcha-container');
+      
+      if (!currentVerifier) {
+        throw new Error('Recaptcha initialization failed. Please ensure your Firebase configuration is correct and Identity Toolkit API is enabled.');
+      }
     }
+
     try {
       // signInWithPhoneNumber handles rendering if not already rendered
-      return await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+      return await signInWithPhoneNumber(auth, phoneNumber, currentVerifier);
     } catch (error: any) {
       safeLog.error('Send OTP failed:', error);
       
@@ -251,7 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         safeLog.log('Recaptcha timeout or failure, resetting...');
         try {
           // Reset the verifier if possible
-          const widgetId = await recaptchaVerifier.render();
+          const widgetId = await currentVerifier.render();
           (window as any).grecaptcha?.reset(widgetId);
         } catch (e) {
           safeLog.warn('Failed to reset recaptcha:', e);

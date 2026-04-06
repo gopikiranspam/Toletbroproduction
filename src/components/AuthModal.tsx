@@ -92,7 +92,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
       if (err.code === 'auth/internal-error' || err.code === 'auth/argument-error' || err.message?.includes('internal-error')) {
         safeLog.log('Retrying recaptcha setup due to error');
         setupRecaptcha('recaptcha-container');
-        setError(`Firebase internal error. Please ensure "${window.location.hostname}" is added to Authorized Domains in Firebase Console.`);
+        setError(`Firebase internal error. This usually means the Identity Toolkit API is disabled or the domain "${window.location.hostname}" is not authorized.`);
       } else {
         setError(err.message || 'Failed to send OTP. Please try again.');
       }
@@ -213,13 +213,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
                   <p>{error}</p>
                   {error.includes('internal-error') && (
                     <div className="mt-2 pt-2 border-t border-red-500/20 text-[10px] text-red-400 text-left">
-                      <p className="font-bold mb-1">Deep Dive Troubleshooting:</p>
-                      <ul className="list-disc ml-3 space-y-0.5">
-                        <li>Enable <strong>Identity Toolkit API</strong> in Google Cloud Console.</li>
-                        <li>Verify <strong>Phone Auth</strong> is enabled in Firebase.</li>
-                        <li>Ensure <strong>{window.location.hostname}</strong> is in Authorized Domains.</li>
-                        <li>Check browser console for detailed logs.</li>
+                      <p className="font-bold mb-1 underline">CRITICAL CONFIGURATION REQUIRED:</p>
+                      <ul className="list-disc ml-3 space-y-1">
+                        <li><strong>Enable Identity Toolkit API</strong> in Google Cloud Console.</li>
+                        <li><strong>Enable Phone Auth</strong> in Firebase Authentication settings.</li>
+                        <li><strong>Add Authorized Domain:</strong> Ensure <code>{window.location.hostname}</code> is added to Firebase Auth Authorized Domains.</li>
+                        <li><strong>Check API Key Restrictions:</strong> Ensure the API Key allows the Identity Toolkit API and the current domain.</li>
                       </ul>
+                      <p className="mt-2 font-bold italic">Check browser console (F12) for "DEEP DIVE" logs with direct links.</p>
                     </div>
                   )}
                 </div>
@@ -265,13 +266,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
                   <p>{error}</p>
                   {error.includes('internal-error') && (
                     <div className="mt-2 pt-2 border-t border-red-500/20 text-[10px] text-red-400 text-left">
-                      <p className="font-bold mb-1">Deep Dive Troubleshooting:</p>
-                      <ul className="list-disc ml-3 space-y-0.5">
-                        <li>Enable <strong>Identity Toolkit API</strong> in Google Cloud Console.</li>
-                        <li>Verify <strong>Phone Auth</strong> is enabled in Firebase.</li>
-                        <li>Ensure <strong>{window.location.hostname}</strong> is in Authorized Domains.</li>
-                        <li>Check browser console for detailed logs.</li>
+                      <p className="font-bold mb-1 underline">CRITICAL CONFIGURATION REQUIRED:</p>
+                      <ul className="list-disc ml-3 space-y-1">
+                        <li><strong>Enable Identity Toolkit API</strong> in Google Cloud Console.</li>
+                        <li><strong>Enable Phone Auth</strong> in Firebase Authentication settings.</li>
+                        <li><strong>Add Authorized Domain:</strong> Ensure <code>{window.location.hostname}</code> is added to Firebase Auth Authorized Domains.</li>
+                        <li><strong>Check API Key Restrictions:</strong> Ensure the API Key allows the Identity Toolkit API and the current domain.</li>
                       </ul>
+                      <p className="mt-2 font-bold italic">Check browser console (F12) for "DEEP DIVE" logs with direct links.</p>
                     </div>
                   )}
                 </div>
@@ -339,13 +341,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode = 'U
                   <p>{error}</p>
                   {error.includes('internal-error') && (
                     <div className="mt-2 pt-2 border-t border-red-500/20 text-[10px] text-red-400 text-left">
-                      <p className="font-bold mb-1">Deep Dive Troubleshooting:</p>
-                      <ul className="list-disc ml-3 space-y-0.5">
-                        <li>Enable <strong>Identity Toolkit API</strong> in Google Cloud Console.</li>
-                        <li>Verify <strong>Phone Auth</strong> is enabled in Firebase.</li>
-                        <li>Ensure <strong>{window.location.hostname}</strong> is in Authorized Domains.</li>
-                        <li>Check browser console for detailed logs.</li>
+                      <p className="font-bold mb-1 underline">CRITICAL CONFIGURATION REQUIRED:</p>
+                      <ul className="list-disc ml-3 space-y-1">
+                        <li><strong>Enable Identity Toolkit API</strong> in Google Cloud Console.</li>
+                        <li><strong>Enable Phone Auth</strong> in Firebase Authentication settings.</li>
+                        <li><strong>Add Authorized Domain:</strong> Ensure <code>{window.location.hostname}</code> is added to Firebase Auth Authorized Domains.</li>
+                        <li><strong>Check API Key Restrictions:</strong> Ensure the API Key allows the Identity Toolkit API and the current domain.</li>
                       </ul>
+                      <p className="mt-2 font-bold italic">Check browser console (F12) for "DEEP DIVE" logs with direct links.</p>
                     </div>
                   )}
                 </div>

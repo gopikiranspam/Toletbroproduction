@@ -52,6 +52,10 @@ const handleFirestoreError = (error: unknown, operationType: OperationType, path
 export const testConnection = async () => {
   try {
     console.log("Attempting to reach Firestore...");
+    console.log("Firestore Config Check:", {
+      projectId: (db as any)._databaseId?.projectId || 'Unknown',
+      databaseId: (db as any)._databaseId?.database || 'Unknown',
+    });
     await getDocFromServer(doc(db, 'test', 'connection'));
     console.log("Firestore reachability test passed.");
   } catch (error) {
@@ -60,6 +64,7 @@ export const testConnection = async () => {
     
     if(errorMessage.includes('the client is offline')) {
       console.error("Please check your Firebase configuration. The SDK reports the client is offline.");
+      console.error("This often happens if the API Key is restricted or Identity Toolkit API is disabled.");
       throw new Error('offline');
     }
     // Re-throw other errors
