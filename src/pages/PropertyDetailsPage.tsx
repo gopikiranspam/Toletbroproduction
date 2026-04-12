@@ -23,7 +23,9 @@ import {
   Building2,
   Compass,
   Eye,
-  QrCode
+  QrCode,
+  Flag,
+  AlertTriangle
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +45,10 @@ export const PropertyDetailsPage: React.FC = () => {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [nearbyProperties, setNearbyProperties] = useState<Property[]>([]);
   const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [isReporting, setIsReporting] = useState(false);
   const [warningType, setWarningType] = useState<'DND' | 'ONLY_MESSAGE' | 'DISCLOSURE' | null>(null);
   const userLocation = useLocation();
   const nearbyToletsScrollRef = useRef<HTMLDivElement>(null);
@@ -146,6 +152,34 @@ export const PropertyDetailsPage: React.FC = () => {
     }
 
     await toggleFavoriteInContext(property.id);
+  };
+
+  const handleReport = async () => {
+    if (!property || !user) {
+      if (!user) openAuth();
+      return;
+    }
+    
+    if (!reportReason) return;
+    
+    setIsReporting(true);
+    try {
+      await api.reportProperty({
+        propertyId: property.id,
+        reporterId: user.id,
+        reporterName: user.name,
+        reason: reportReason,
+        details: reportDetails
+      });
+      setShowReportModal(false);
+      setReportReason('');
+      setReportDetails('');
+      alert('Property reported successfully. Our team will investigate.');
+    } catch (error) {
+      console.error('Error reporting property:', error);
+    } finally {
+      setIsReporting(false);
+    }
   };
 
   const handleContactClick = (type: 'call' | 'message') => {
@@ -363,6 +397,13 @@ export const PropertyDetailsPage: React.FC = () => {
               </div>
 
               <div className="absolute top-6 right-6 flex gap-3">
+                <button 
+                  onClick={() => setShowReportModal(true)}
+                  className="rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-colors hover:bg-red-500/50"
+                  title="Report Property"
+                >
+                  <Flag size={20} />
+                </button>
                 <button 
                   onClick={handleShare}
                   className="rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20"
@@ -721,6 +762,13 @@ export const PropertyDetailsPage: React.FC = () => {
                   <span>Meet the owner in a public place for the first time.</span>
                 </li>
               </ul>
+              <button 
+                onClick={() => setShowReportModal(true)}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold text-red-500 transition-all hover:bg-red-500/10"
+              >
+                <Flag size={14} />
+                Report this Property
+              </button>
             </div>
           </div>
         </div>
@@ -745,6 +793,82 @@ export const PropertyDetailsPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Report Modal */}
+      <AnimatePresence>
+        {showReportModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowReportModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-8 shadow-2xl"
+            >
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+                  <AlertTriangle size={32} />
+                </div>
+              </div>
+
+              <h3 className="mb-2 text-center text-xl font-bold text-[var(--text-primary)]">Report Property</h3>
+              <p className="mb-6 text-center text-sm text-[var(--text-secondary)]">
+                Help us keep ToLetBro safe. Why are you reporting this property?
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">Reason</label>
+                  <select 
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 text-sm outline-none focus:border-brand"
+                  >
+                    <option value="">Select a reason</option>
+                    <option value="Fake Listing">Fake Listing / Scammer</option>
+                    <option value="Incorrect Details">Incorrect Details / Photos</option>
+                    <option value="Already Occupied">Already Occupied / Sold</option>
+                    <option value="Inappropriate Content">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">Additional Details</label>
+                  <textarea 
+                    value={reportDetails}
+                    onChange={(e) => setReportDetails(e.target.value)}
+                    placeholder="Please provide more information..."
+                    className="h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 text-sm outline-none focus:border-brand resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    onClick={() => setShowReportModal(false)}
+                    className="flex-1 rounded-xl border border-[var(--border)] py-3 text-sm font-bold text-[var(--text-primary)]"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleReport}
+                    disabled={!reportReason || isReporting}
+                    className="flex-1 rounded-xl bg-red-500 py-3 text-sm font-bold text-white shadow-lg shadow-red-500/20 disabled:opacity-50"
+                  >
+                    {isReporting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Privacy Warning Modal */}
       <AnimatePresence>

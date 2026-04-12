@@ -128,7 +128,10 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if true; // Allow public read for owner profiles and basic info
+      // Allow anyone to get a specific user profile (for public profiles)
+      // But only admins can list all users
+      allow get: if true;
+      allow list: if isAdmin();
       allow create: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data) && (request.resource.data.role != 'ADMIN' || isAdmin());
       allow update: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data) && (request.resource.data.role != 'ADMIN' || isAdmin());
       allow delete: if isAdmin();
@@ -160,6 +163,25 @@ service cloud.firestore {
 
     match /test/{docId} {
       allow read: if true;
+    }
+
+    match /slides/{slideId} {
+      allow read: if true; // Publicly readable for home page
+      allow write: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /complaints/{complaintId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
     
     // Storage rules are not in this file, but I'll ensure firestore rules are deployed.

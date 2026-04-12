@@ -79,9 +79,49 @@ export interface User {
   phone: string;
   email?: string;
   role?: UserRole;
+  userType?: UserType;
+  status?: 'Active' | 'Blocked' | 'Deleted';
+  blockReason?: string;
+  deleteReason?: string;
+  reportCount?: number;
+  propertyId?: string;
   qrId?: string;
   favorites?: string[];
   privacy?: PrivacySettings;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  amount: number;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  txnid: string;
+  createdAt: string;
+  productInfo: string;
+}
+
+export interface Complaint {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  subject: string;
+  description: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+  createdAt: string;
+}
+
+export interface Report {
+  id: string;
+  propertyId: string;
+  reporterId: string;
+  reporterName: string;
+  reason: string;
+  details: string;
+  status: 'PENDING' | 'INVESTIGATED' | 'DISMISSED';
+  createdAt: string;
 }
 
 export type DNDReason = 'Busy' | 'Out of station' | 'Not available';

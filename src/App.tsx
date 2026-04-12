@@ -29,6 +29,9 @@ import { PropertyDetailsPage } from './pages/PropertyDetailsPage';
 import { SearchPage } from './pages/SearchPage';
 import { OwnerQRDashboard } from './pages/OwnerQRDashboard';
 import { AdminQRPanel } from './pages/AdminQRPanel';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminUserDetailPage } from './pages/AdminUserDetailPage';
+import { AdminSlidesPanel } from './pages/AdminSlidesPanel';
 import { ProfilePage } from './pages/ProfilePage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { ScannerPage } from './pages/ScannerPage';
@@ -37,6 +40,7 @@ import { ListProperty } from './pages/ListProperty';
 import { Dashboard } from './pages/Dashboard';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { OrderBoardPage } from './pages/OrderBoardPage';
+import { OrderStatusPage } from './pages/OrderStatusPage';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { HelmetProvider } from 'react-helmet-async';
@@ -589,12 +593,16 @@ const router = createBrowserRouter([
       { path: "/dashboard", element: <Dashboard /> },
       { path: "/dashboard/qr", element: <OwnerQRDashboard /> },
       { path: "/favorites", element: <FavoritesPage /> },
+      { path: "/admin", element: <AdminDashboard /> },
+      { path: "/admin/users/:userId", element: <AdminUserDetailPage /> },
       { path: "/admin/qr", element: <AdminQRPanel /> },
+      { path: "/admin/slides", element: <AdminSlidesPanel /> },
       { path: "/scan", element: <ScannerPage /> },
       { path: "/profile", element: <ProfilePage /> },
       { path: "/privacy-controls", element: <PrivacyPage /> },
       { path: "/list-property", element: <ListProperty /> },
       { path: "/order-board", element: <OrderBoardPage /> },
+      { path: "/order-status", element: <OrderStatusPage /> },
       { path: "/about-us", element: <AboutUsPage /> },
       { path: "/privacy-policy", element: <LegalPage type="privacy" /> },
       { path: "/terms-of-service", element: <LegalPage type="terms" /> },

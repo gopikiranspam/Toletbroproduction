@@ -16,6 +16,7 @@ import {
   Edit3,
   AlertTriangle,
   Loader2,
+  Ban,
   ChevronRight,
   Plus,
   Sparkles,
@@ -102,6 +103,38 @@ export const Dashboard: React.FC = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
         <Loader2 size={48} className="animate-spin text-brand" />
+      </div>
+    );
+  }
+
+  if (user?.status === 'Blocked') {
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center text-center px-6">
+        <Ban size={64} className="text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Account Blocked</h2>
+        <p className="mt-2 text-[var(--text-secondary)]">Your account has been blocked by an administrator.</p>
+        {user.blockReason && (
+          <div className="mt-6 p-4 rounded-2xl bg-red-500/5 border border-red-500/20 max-w-md">
+            <p className="text-xs font-bold uppercase text-red-500 mb-1">Reason</p>
+            <p className="text-sm text-[var(--text-secondary)]">{user.blockReason}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (user?.status === 'Deleted') {
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center text-center px-6">
+        <Trash2 size={64} className="text-gray-500 mb-4" />
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Account Deleted</h2>
+        <p className="mt-2 text-[var(--text-secondary)]">Your account has been deleted by an administrator.</p>
+        {user.deleteReason && (
+          <div className="mt-6 p-4 rounded-2xl bg-gray-500/5 border border-gray-500/20 max-w-md">
+            <p className="text-xs font-bold uppercase text-gray-500 mb-1">Reason</p>
+            <p className="text-sm text-[var(--text-secondary)]">{user.deleteReason}</p>
+          </div>
+        )}
       </div>
     );
   }

@@ -34,7 +34,13 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({ onOpenAuth }) => {
     { icon: Heart, label: 'Favorites', path: '/favorites' },
   ];
 
-  const baseTabs = user?.role === 'OWNER' ? ownerTabs : finderTabs;
+  const adminTabs: TabItem[] = [
+    { icon: Shield, label: 'Admin', path: '/admin' },
+    { icon: LayoutGrid, label: 'QR', path: '/admin/qr' },
+    { icon: Search, label: 'Search', path: '/search/all' },
+  ];
+
+  const baseTabs = (user?.role === 'ADMIN' || user?.email === 'gopikiranspam@gmail.com') ? adminTabs : (user?.role === 'OWNER' ? ownerTabs : finderTabs);
   
   // Add dynamic Profile/Login tab
   const tabs: TabItem[] = [

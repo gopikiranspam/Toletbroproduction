@@ -34,7 +34,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
           <div className="hidden items-center gap-8 md:flex">
             <Link to="/search/rent" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Rent</Link>
             <Link to="/search/buy" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Buy</Link>
-            {user?.role === 'OWNER' ? (
+            {user?.role === 'ADMIN' || user?.email === 'gopikiranspam@gmail.com' ? (
+              <Link to="/admin" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Admin</Link>
+            ) : user?.role === 'OWNER' ? (
               <Link to="/dashboard" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Dashboard</Link>
             ) : (
               <Link to="/favorites" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-brand">Favorites</Link>

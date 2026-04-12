@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   ArrowLeft, 
@@ -10,12 +10,87 @@ import {
   Package,
   ShieldAlert,
   Clock,
-  MapPin
+  MapPin,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export const OrderBoardPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, openAuth } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleOrder = async () => {
+    if (!user) {
+      openAuth('USER');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const txnid = `TB${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      const amount = "499.00";
+      const productinfo = "Smart Tolet Board";
+      const firstname = user.name || "Customer";
+      const email = user.email || "";
+      const phone = user.phone || "";
+
+      // 1. Get Hash from Backend
+      const response = await fetch('/api/payu/hash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          txnid,
+          amount,
+          productinfo,
+          firstname,
+          email,
+          udf1: user.id // Store userId in udf1
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to generate payment hash');
+      const { hash, key, payuUrl } = await response.json();
+
+      // 2. Create and Submit PayU Form
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = payuUrl;
+
+      const fields: Record<string, string> = {
+        key,
+        txnid,
+        amount,
+        productinfo,
+        firstname,
+        email,
+        phone,
+        hash,
+        surl: `${window.location.origin}/api/payu/response`,
+        furl: `${window.location.origin}/api/payu/response`,
+        udf1: user.id,
+        service_provider: "payu_paisa"
+      };
+
+      Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong');
+      setLoading(false);
+    }
+  };
 
   const benefits = [
     { icon: ShieldCheck, title: 'Hide your number & avoid unnecessary calls', desc: 'Hide your personal number and avoid unnecessary calls from non-serious people.' },
@@ -91,13 +166,25 @@ export const OrderBoardPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col justify-center border-t border-[var(--border)] pt-8 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+                {error && (
+                  <p className="mb-4 text-center text-xs font-bold text-red-500">{error}</p>
+                )}
                 <button 
-                  className="w-full rounded-2xl bg-brand py-4 text-sm font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-[1.02]"
+                  onClick={handleOrder}
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-sm font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  Proceed to Order
+                  {loading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    user ? 'Proceed to Order' : 'Login to Order'
+                  )}
                 </button>
                 <p className="mt-4 text-center text-[10px] text-[var(--text-secondary)]">
-                  Secure checkout powered by Razorpay
+                  Secure checkout powered by PayU
                 </p>
               </div>
             </div>

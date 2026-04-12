@@ -13,7 +13,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Property, QRCodeData, Owner, OperationType, Slide } from '../types';
+import { Property, QRCodeData, Owner, OperationType, Slide, User } from '../types';
 import { safeLog, safeStringify } from '../utils/logger';
 
 // Error handler for Firestore permissions
@@ -206,6 +206,17 @@ export const api = {
     }
   },
   
+  getQRCodes: async (): Promise<QRCodeData[]> => {
+    const path = 'qrcodes';
+    try {
+      const snapshot = await getDocs(collection(db, path));
+      return snapshot.docs.map(doc => ({ qrId: doc.id, ...doc.data() } as QRCodeData));
+    } catch (error) {
+      handleFirestoreError(error, 'list' as any, path);
+      return [];
+    }
+  },
+
   linkQRToOwner: async (qrId: string, ownerId: string): Promise<boolean> => {
     const path = `qrcodes/${qrId}`;
     try {
@@ -465,6 +476,99 @@ export const api = {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
       return false;
+    }
+  },
+
+  // Admin APIs
+  getUsers: async (): Promise<User[]> => {
+    const path = 'users';
+    try {
+      const snapshot = await getDocs(collection(db, path));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  },
+
+  getOrders: async (): Promise<any[]> => {
+    const path = 'orders';
+    try {
+      const snapshot = await getDocs(collection(db, path));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  },
+
+  getComplaints: async (): Promise<any[]> => {
+    const path = 'complaints';
+    try {
+      const snapshot = await getDocs(collection(db, path));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  },
+
+  reportProperty: async (reportData: any): Promise<void> => {
+    const path = 'reports';
+    try {
+      const reportId = `report-${Date.now()}`;
+      await setDoc(doc(db, 'reports', reportId), {
+        ...reportData,
+        id: reportId,
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+      });
+      
+      // Increment report count on property
+      const propRef = doc(db, 'properties', reportData.propertyId);
+      await updateDoc(propRef, {
+        reportCount: increment(1)
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, path);
+    }
+  },
+
+  blockUser: async (userId: string, reason: string): Promise<void> => {
+    const path = `users/${userId}`;
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        status: 'Blocked',
+        blockReason: reason
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  },
+
+  deleteUser: async (userId: string, reason: string): Promise<void> => {
+    const path = `users/${userId}`;
+    try {
+      // Soft delete
+      await updateDoc(doc(db, 'users', userId), {
+        status: 'Deleted',
+        isDeleted: true,
+        deleteReason: reason
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  },
+
+  getOrdersByUserId: async (userId: string): Promise<any[]> => {
+    const path = 'orders';
+    try {
+      const q = query(collection(db, path), where('userId', '==', userId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
     }
   },
 };

@@ -9,7 +9,11 @@ import { useNavigate } from 'react-router-dom';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-export const AdminQRPanel: React.FC = () => {
+interface AdminQRPanelProps {
+  embedded?: boolean;
+}
+
+export const AdminQRPanel: React.FC<AdminQRPanelProps> = ({ embedded = false }) => {
   const navigate = useNavigate();
   const { user, isAuthReady, openAuth } = useAuth();
   const [count, setCount] = useState(5);
@@ -162,19 +166,25 @@ export const AdminQRPanel: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className={`mx-auto max-w-7xl ${embedded ? '' : 'px-6 py-12'}`}>
       <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">Admin QR Generator</h1>
-          <p className="mt-2 text-[var(--text-secondary)]">Bulk generate Smart Tolet Board QR codes for distribution.</p>
+          {!embedded && (
+            <>
+              <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">Admin QR Generator</h1>
+              <p className="mt-2 text-[var(--text-secondary)]">Bulk generate Smart Tolet Board QR codes for distribution.</p>
+            </>
+          )}
           <div className="mt-4 flex gap-4">
-            <button 
-              onClick={() => navigate('/admin/slides')}
-              className="flex items-center gap-2 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] px-4 py-2 text-xs font-bold text-[var(--text-primary)] transition-all hover:border-brand hover:text-brand"
-            >
-              <LayoutGrid size={16} />
-              Manage Slides
-            </button>
+            {!embedded && (
+              <button 
+                onClick={() => navigate('/admin/slides')}
+                className="flex items-center gap-2 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] px-4 py-2 text-xs font-bold text-[var(--text-primary)] transition-all hover:border-brand hover:text-brand"
+              >
+                <LayoutGrid size={16} />
+                Manage Slides
+              </button>
+            )}
           </div>
         </div>
         
