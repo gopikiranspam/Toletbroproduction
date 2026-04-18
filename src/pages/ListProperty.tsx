@@ -16,7 +16,8 @@ import {
   Loader2,
   X,
   Info,
-  Navigation
+  Navigation,
+  AlertTriangle
 } from 'lucide-react';
 import { api } from '../services/api';
 import { mapsService } from '../services/mapsService';
@@ -70,16 +71,16 @@ export const ListProperty: React.FC = () => {
     state: 'Maharashtra',
     city: '',
     pincode: '',
-    rent: 0,
-    deposit: 0,
-    maintenance: 0,
-    expectedPrice: 0,
+    rent: '' as unknown as number,
+    deposit: '' as unknown as number,
+    maintenance: '' as unknown as number,
+    expectedPrice: '' as unknown as number,
     priceNegotiable: false,
     loanAvailable: false,
-    sqft: 0,
-    floorNumber: 0,
-    totalFloors: 0,
-    bathrooms: 1,
+    sqft: '' as unknown as number,
+    floorNumber: '' as unknown as number,
+    totalFloors: '' as unknown as number,
+    bathrooms: '' as unknown as number,
     preferredTenant: 'Anyone' as PreferredTenant,
     availableFrom: new Date().toISOString().split('T')[0],
     amenities: [] as string[],
@@ -90,9 +91,12 @@ export const ListProperty: React.FC = () => {
     lng: undefined as number | undefined,
   });
 
-  const [images, setImages] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [allImages, setAllImages] = useState<{
+    id: string;
+    preview: string;
+    file?: File;
+    url?: string;
+  }[]>([]);
   const [fetchingAddress, setFetchingAddress] = useState(false);
 
   // Auto-generate description
@@ -131,15 +135,15 @@ export const ListProperty: React.FC = () => {
           state: property.state || 'Maharashtra',
           pincode: property.pincode || '',
           fullAddress: property.fullAddress || '',
-          rent: property.category === 'Rent' ? property.price : 0,
-          deposit: property.deposit || 0,
-          maintenance: property.maintenance || 0,
-          expectedPrice: property.category === 'Sale' ? property.price : 0,
+          rent: property.category === 'Rent' ? property.price : '' as unknown as number,
+          deposit: property.deposit || '' as unknown as number,
+          maintenance: property.maintenance || '' as unknown as number,
+          expectedPrice: property.category === 'Sale' ? property.price : '' as unknown as number,
           priceNegotiable: property.priceNegotiable || false,
           loanAvailable: property.loanAvailable || false,
-          sqft: property.sqft,
-          floorNumber: property.floorNumber || 0,
-          totalFloors: property.totalFloors || 0,
+          sqft: property.sqft || '' as unknown as number,
+          floorNumber: property.floorNumber || '' as unknown as number,
+          totalFloors: property.totalFloors || '' as unknown as number,
           bathrooms: property.baths,
           preferredTenant: property.preferredTenant || 'Anyone',
           availableFrom: property.availableFrom || new Date().toISOString().split('T')[0],
@@ -150,8 +154,13 @@ export const ListProperty: React.FC = () => {
           lat: property.lat,
           lng: property.lng,
         });
-        setExistingImages(property.images || []);
-        setPreviews(property.images || []);
+        
+        const initialImages = (property.images || []).map(url => ({
+          id: Math.random().toString(36).substring(7),
+          preview: url,
+          url: url
+        }));
+        setAllImages(initialImages);
       }
     } catch (err) {
       console.error("Failed to fetch property for editing:", err);
@@ -197,28 +206,32 @@ export const ListProperty: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-               type === 'number' ? (Number(value) || 0) : value
+               type === 'number' ? (value === '' ? '' : Number(value)) : value
     }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files) as File[];
-      setImages(prev => [...prev, ...newFiles]);
-      
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setPreviews(prev => [...prev, ...newPreviews]);
+      const newItems = newFiles.map(file => ({
+        id: Math.random().toString(36).substring(7),
+        preview: URL.createObjectURL(file),
+        file: file
+      }));
+      setAllImages(prev => [...prev, ...newItems]);
     }
   };
 
-  const removeImage = (index: number) => {
-    if (index < existingImages.length) {
-      setExistingImages(prev => prev.filter((_, i) => i !== index));
-    } else {
-      const newIndex = index - existingImages.length;
-      setImages(prev => prev.filter((_, i) => i !== newIndex));
-    }
-    setPreviews(prev => prev.filter((_, i) => i !== index));
+  const removeImage = (id: string) => {
+    setAllImages(prev => prev.filter(img => img.id !== id));
+  };
+
+  const setThumbnail = (index: number) => {
+    if (index === 0) return;
+    const items = [...allImages];
+    const [selected] = items.splice(index, 1);
+    items.unshift(selected);
+    setAllImages(items);
   };
 
   const toggleItem = (list: 'amenities' | 'nearbyFacilities', item: string) => {
@@ -235,28 +248,51 @@ export const ListProperty: React.FC = () => {
   };
 
   const generateDefaultDescription = () => {
+    const furnishingText = formData.furnishing === 'Unfurnished' ? 'non-furnished' : formData.furnishing.toLowerCase();
+    const balconyText = Math.random() > 0.5 ? ' and features a beautiful balcony view' : '';
+    
     if (formData.category === 'Rent') {
-      return `Beautiful ${formData.bhkType} ${formData.type} available for rent in ${formData.locality}, ${formData.city}. The property is ${formData.furnishing} and features ${formData.bathrooms} bathrooms. Built-up area is ${formData.sqft} sq ft. Located on floor ${formData.floorNumber} of ${formData.totalFloors}. Preferred tenants: ${formData.preferredTenant}. Available from ${formData.availableFrom}.`;
+      return `Welcome to your new home! This spacious and well-lit ${formData.bhkType} ${formData.type} is perfectly situated in the heart of ${formData.locality}, ${formData.city}. 
+
+This ${furnishingText} property is designed for comfort and convenience, offering ${formData.bathrooms} modern bathrooms and a generous built-up area of ${formData.sqft || '...'} sq ft${balconyText}. Located on floor ${formData.floorNumber || '...'} of ${formData.totalFloors || '...'}, it provides a peaceful living environment while being close to all essential urban amenities.
+
+Key Highlights:
+• Preferred for: ${formData.preferredTenant}
+• Monthly Rent: ₹${formData.rent || '...'}
+• Availability: Ready to move in from ${formData.availableFrom}
+
+Whether you're a family looking for a stable home or a professional seeking convenience, this property is an excellent choice for anyone who values quality living.`;
     } else {
-      return `Excellent ${formData.bhkType} ${formData.type} for sale in ${formData.locality}, ${formData.city}. This ${formData.furnishing} property offers ${formData.sqft} sq ft of built-up area. It has ${formData.bathrooms} bathrooms and is situated on floor ${formData.floorNumber}. Loan facility is ${formData.loanAvailable ? 'available' : 'not available'}.`;
+      return `Prime Investment Opportunity: A stunning ${formData.bhkType} ${formData.type} is now available for sale in the sought-after locality of ${formData.locality}, ${formData.city}. 
+
+This ${furnishingText} property boasts ${formData.sqft || '...'} sq ft of smarty-utilized built-up area, perfect for modern living. Situated on the ${formData.floorNumber || '...'} floor, the property offers great ventilation and natural light${balconyText}. 
+
+Why this property?
+• Excellent condition and ${formData.furnishing}
+• Clear titles and loan facility ${formData.loanAvailable ? 'available' : 'can be arranged'}
+• Strategically located in ${formData.locality} with high appreciation potential
+
+Don't miss out on this chance to own a premium piece of real estate in ${formData.city}. Ideal for both end-users and investors.`;
     }
   };
 
   const [error, setError] = useState<string | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const validateForm = () => {
-    if (!formData.locality.trim()) return "Locality is required";
-    if (!formData.city.trim()) return "City is required";
+    if (!formData.locality.trim()) return "Property Locality is required";
+    if (!formData.city.trim()) return "City name is required";
     if (!formData.state) return "State is required";
-    if (!formData.pincode.trim() || formData.pincode.length !== 6) return "Pincode must be 6 digits";
-    if (formData.category === 'Rent' && formData.rent <= 0) return "Rent must be greater than 0";
-    if (formData.category === 'Sale' && formData.expectedPrice <= 0) return "Expected price must be greater than 0";
-    if (formData.sqft <= 0) return "Built-up area must be greater than 0";
-    if (formData.bathrooms <= 0) return "Number of bathrooms must be at least 1";
-    if (formData.category === 'Sale' && formData.amenities.length === 0) return "At least one amenity is required for sale";
+    if (!formData.pincode.trim() || formData.pincode.length !== 6) return "Pincode must be exactly 6 digits";
+    if (formData.category === 'Rent' && (!formData.rent || formData.rent <= 0)) return "Monthly Rent amount is required";
+    if (formData.category === 'Sale' && (!formData.expectedPrice || formData.expectedPrice <= 0)) return "Expected Sale Price is required";
+    if (!formData.sqft || formData.sqft <= 0) return "Property Built-up Area is required";
+    if (!formData.bathrooms || formData.bathrooms <= 0) return "Number of bathrooms must be at least 1";
+    if (formData.category === 'Sale' && formData.amenities.length === 0) return "At least one amenity is mandatory for sale properties";
     
-    const wordCount = formData.description.trim().split(/\s+/).filter(w => w.length > 0).length;
-    if (wordCount < 50) return `Description must be at least 50 words (current: ${wordCount})`;
+    if (allImages.length < 3) return "Safety first! Please upload at least 3 photos of your property.";
+    
+    if (formData.category === 'Rent' && !formData.preferredTenant) return "Please select a preferred tenant type";
     
     return null;
   };
@@ -267,7 +303,7 @@ export const ListProperty: React.FC = () => {
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setShowErrorModal(true);
       return;
     }
 
@@ -276,8 +312,28 @@ export const ListProperty: React.FC = () => {
     setError(null);
     try {
       const beds = parseInt(formData.bhkType) || 1;
+      const propertyIdToUse = propertyId || `prop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      
+      // Handle Image Uploads and Ordering
+      const finalImageUrls: string[] = [];
+      const filesToUpload = allImages.filter(img => img.file);
+      let uploadedCount = 0;
+
+      for (let i = 0; i < allImages.length; i++) {
+        const item = allImages[i];
+        if (item.file) {
+          const url = await api.uploadImage(propertyIdToUse, item.file);
+          finalImageUrls.push(url);
+          uploadedCount++;
+          setUploadProgress(10 + (uploadedCount / Math.max(1, filesToUpload.length)) * 70);
+        } else if (item.url) {
+          finalImageUrls.push(item.url);
+        }
+      }
+
       const finalData = {
         ...formData,
+        id: propertyIdToUse,
         title: generateDefaultTitle(),
         slug: generateDefaultTitle().toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
         description: formData.description || generateDefaultDescription(),
@@ -286,16 +342,31 @@ export const ListProperty: React.FC = () => {
         beds,
         baths: formData.bathrooms,
         features: [...formData.amenities, ...formData.nearbyFacilities],
-        ownerId: user.id,
-        images: existingImages, // Keep existing images
+        ownerId: user.id!,
+        images: finalImageUrls,
+        imageUrl: finalImageUrls[0] || '',
+        updatedAt: new Date().toISOString(),
+        isActive: true,
       };
 
-      setUploadProgress(30);
-      if (isEditMode && propertyId) {
-        await api.updateProperty(propertyId, finalData as any, images);
+      setUploadProgress(90);
+      
+      // Save directly to Firestore since we handled uploads explicitly for ordering
+      const { db } = await import('../firebase');
+      const { doc, setDoc, updateDoc } = await import('firebase/firestore');
+      
+      if (isEditMode) {
+        await updateDoc(doc(db, 'properties', propertyIdToUse), finalData as any);
       } else {
-        await api.createProperty(finalData as any, images);
+        await setDoc(doc(db, 'properties', propertyIdToUse), {
+          ...finalData,
+          createdAt: new Date().toISOString(),
+          views: 0,
+          scans: 0,
+          favoritesCount: 0,
+        });
       }
+
       setUploadProgress(100);
       setIsSuccess(true);
     } catch (err: any) {
@@ -314,8 +385,14 @@ export const ListProperty: React.FC = () => {
     }
   };
 
-  const nextStage = () => setStage(prev => Math.min(prev + 1, 3));
-  const prevStage = () => setStage(prev => Math.max(prev - 1, 1));
+  const nextStage = () => {
+    setStage(prev => Math.min(prev + 1, 3));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const prevStage = () => {
+    setStage(prev => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (!user) {
     return (
@@ -372,8 +449,8 @@ export const ListProperty: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 md:px-6 md:py-12">
-      <div className="mb-12 text-center">
+    <div className="mx-auto max-w-4xl px-4 py-4 md:px-6 md:py-12">
+      <div className="mb-6 md:mb-12 text-center md:block hidden">
         <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">
           {isEditMode ? 'Edit Property' : 'List Your Property'}
         </h1>
@@ -382,52 +459,114 @@ export const ListProperty: React.FC = () => {
         </p>
       </div>
 
+      <AnimatePresence>
+        {showErrorModal && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-[var(--card-bg)] p-8 shadow-2xl border border-[var(--border)]"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+                  <AlertTriangle size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">Hold on!</h3>
+                <p className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed">
+                  {error}
+                </p>
+                <button 
+                  onClick={() => setShowErrorModal(false)}
+                  className="mt-8 w-full rounded-2xl bg-brand py-4 text-sm font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-105 active:scale-95"
+                >
+                  Ok, I'll fix it
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Progress Bar - Sticky on Mobile */}
-      <div className="sticky top-0 z-50 -mx-4 mb-12 bg-[var(--bg)] px-4 py-4 shadow-md md:static md:mx-0 md:bg-transparent md:p-0 md:shadow-none">
-        <div className="flex items-center justify-between px-4">
+      <div className="sticky top-0 z-50 -mx-4 mb-4 md:mb-12 bg-[var(--bg)] px-4 py-3 shadow-sm md:static md:mx-0 md:bg-transparent md:p-0 md:shadow-none">
+        <div className="flex items-center justify-between px-1 md:px-4">
           {[1, 2, 3].map((num) => (
             <React.Fragment key={num}>
-              <div className="flex flex-col items-center gap-2">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
+              <div className="flex flex-col items-center gap-1.5 md:gap-2">
+                <div className={`flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full border-2 transition-all ${
                   stage >= num ? 'border-brand bg-brand text-black' : 'border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)]'
                 }`}>
-                  {stage > num ? <CheckCircle2 size={20} /> : num}
+                  {stage > num ? <CheckCircle2 size={16} md:size={20} /> : <span className="text-sm font-bold">{num}</span>}
                 </div>
-                <span className={`text-[10px] font-medium sm:text-xs ${stage >= num ? 'text-brand' : 'text-[var(--text-secondary)]'}`}>
-                  {num === 1 ? 'Preliminary' : num === 2 ? 'Specs' : 'Final'}
+                <span className={`text-[9px] font-bold uppercase tracking-tight md:text-xs ${stage >= num ? 'text-brand' : 'text-[var(--text-secondary)]'}`}>
+                  {num === 1 ? 'Info' : num === 2 ? 'Specs' : 'Final'}
                 </span>
               </div>
               {num < 3 && (
-                <div className={`h-0.5 flex-1 mx-4 transition-all ${stage > num ? 'bg-brand' : 'bg-[var(--border)]'}`} />
+                <div className={`h-0.5 flex-1 mx-2 md:mx-4 transition-all ${stage > num ? 'bg-brand' : 'bg-[var(--border)]'}`} />
               )}
             </React.Fragment>
           ))}
         </div>
       </div>
 
-      <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-6 md:p-12">
-        {loading && (
-          <div className="mb-8 space-y-2">
-            <div className="flex justify-between text-sm font-bold">
-              <span>Uploading Property...</span>
-              <span>{uploadProgress}%</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
-              <motion.div 
-                className="h-full bg-brand"
-                initial={{ width: 0 }}
-                animate={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {error && (
+      <div className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-12 shadow-sm">
+        {error && !showErrorModal && (
           <div className="mb-8 flex items-center gap-3 rounded-2xl bg-red-500/10 p-4 text-red-500">
             <Info size={20} />
             <p className="text-sm font-medium">{error}</p>
           </div>
         )}
+
+        {/* Submission Progress Modal */}
+        <AnimatePresence>
+          {loading && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative flex flex-col items-center gap-8 rounded-[3rem] bg-[var(--card-bg)] p-12 shadow-2xl border border-[var(--border)]"
+              >
+                <div className="relative h-32 w-32">
+                  <svg className="h-full w-full rotate-[-90deg]">
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="60"
+                      fill="transparent"
+                      stroke="var(--border)"
+                      strokeWidth="8"
+                      className="opacity-20"
+                    />
+                    <motion.circle
+                      cx="64"
+                      cy="64"
+                      r="60"
+                      fill="transparent"
+                      stroke="var(--color-brand)"
+                      strokeWidth="8"
+                      strokeDasharray="377"
+                      initial={{ strokeDashoffset: 377 }}
+                      animate={{ strokeDashoffset: 377 - (377 * uploadProgress / 100) }}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-brand">
+                    <Building2 size={40} />
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">Listing Property</h3>
+                  <p className="text-sm text-[var(--text-secondary)] mt-2">Uploading images and securing your connection...</p>
+                  <div className="mt-4 text-2xl font-black text-brand">{uploadProgress}%</div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
         <AnimatePresence mode="wait">
           {stage === 1 && (
             <motion.div
@@ -503,49 +642,53 @@ export const ListProperty: React.FC = () => {
               </div>
 
               {/* Pricing Section */}
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {formData.category === 'Rent' ? (
                   <>
-                    <div className="space-y-3">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Monthly Rent (₹) *</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Monthly Rent (₹) *</label>
                       <input 
                         type="number" 
                         name="rent"
+                        placeholder="0"
                         value={formData.rent}
                         onChange={handleInputChange}
-                        className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-lg font-bold text-brand focus:border-brand focus:outline-none"
                       />
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Security Deposit (₹)</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Security Deposit (₹)</label>
                       <input 
                         type="number" 
                         name="deposit"
+                        placeholder="0"
                         value={formData.deposit}
                         onChange={handleInputChange}
-                        className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-lg font-bold text-[var(--text-primary)] focus:border-brand focus:outline-none"
                       />
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Maintenance (₹)</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Maintenance (₹)</label>
                       <input 
                         type="number" 
                         name="maintenance"
+                        placeholder="0"
                         value={formData.maintenance}
                         onChange={handleInputChange}
-                        className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-lg font-bold text-[var(--text-primary)] focus:border-brand focus:outline-none"
                       />
                     </div>
                   </>
                 ) : (
-                  <div className="space-y-3 md:col-span-3">
-                    <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Expected Price (₹) *</label>
+                  <div className="space-y-2 md:col-span-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Expected Selling Price (₹) *</label>
                     <input 
                       type="number" 
                       name="expectedPrice"
+                      placeholder="0"
                       value={formData.expectedPrice}
                       onChange={handleInputChange}
-                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                      className="w-full rounded-2xl border border-brand bg-[var(--bg)] p-4 text-2xl font-black text-brand focus:outline-none"
                     />
                   </div>
                 )}
@@ -645,17 +788,39 @@ export const ListProperty: React.FC = () => {
                   />
                 </div>
 
-                {previews.length > 0 && (
+                {allImages.length > 0 && (
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-5">
-                    {previews.map((preview, index) => (
-                      <div key={index} className="group relative aspect-square overflow-hidden rounded-2xl border border-[var(--border)]">
-                        <img src={preview || null} alt={`Property preview ${index + 1}`} className="h-full w-full object-cover" />
+                    {allImages.map((img, index) => (
+                      <div 
+                        key={img.id} 
+                        className={`group relative aspect-square overflow-hidden rounded-2xl border-2 transition-all ${index === 0 ? 'border-brand shadow-lg scale-105 z-10' : 'border-[var(--border)]'}`}
+                      >
+                        <img src={img.preview} alt={`Property preview ${index + 1}`} className="h-full w-full object-cover" />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setThumbnail(index);
+                            }}
+                            className="w-full text-[10px] font-bold text-white uppercase tracking-tighter"
+                          >
+                            {index === 0 ? 'Main Image' : 'Set Main'}
+                          </button>
+                        </div>
                         <button 
-                          onClick={() => removeImage(index)}
-                          className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeImage(img.id);
+                          }}
+                          className="absolute right-2 top-2 rounded-full bg-black/50 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500"
                         >
-                          <X size={16} />
+                          <X size={14} />
                         </button>
+                        {index === 0 && (
+                          <div className="absolute left-2 top-2 rounded-lg bg-brand px-2 py-0.5 text-[8px] font-black uppercase text-black">
+                            Cover
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -683,7 +848,7 @@ export const ListProperty: React.FC = () => {
             >
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Built-up Area (sq ft) *</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Built-up Area (sq ft)</label>
                   <div className="relative">
                     <Maximize className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
                     <input 
@@ -697,12 +862,13 @@ export const ListProperty: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Bathrooms *</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Bathrooms</label>
                   <div className="relative">
                     <Bath className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
                     <input 
                       type="number" 
                       name="bathrooms"
+                      placeholder="0"
                       value={formData.bathrooms}
                       onChange={handleInputChange}
                       className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] py-3 pl-12 pr-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
@@ -711,7 +877,7 @@ export const ListProperty: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Floor Number *</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Floor Number</label>
                   <input 
                     type="number" 
                     name="floorNumber"
@@ -733,12 +899,12 @@ export const ListProperty: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Preferred Tenant *</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-brand">Preferred Tenant *</label>
                   <select 
                     name="preferredTenant"
                     value={formData.preferredTenant}
                     onChange={handleInputChange}
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                    className="w-full rounded-2xl border border-brand/30 bg-[var(--bg)] p-3 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                   >
                     {['Family only', 'Bachelor', 'Office Only', 'Anyone'].map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -747,7 +913,7 @@ export const ListProperty: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Available From *</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Available From</label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
                     <input 
@@ -815,23 +981,19 @@ export const ListProperty: React.FC = () => {
 
               <div className="space-y-6">
                 <h3 className="text-lg font-bold text-[var(--text-primary)]">Amenities {formData.category === 'Sale' && '(Mandatory)'}</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-wrap gap-2">
                   {AMENITIES_LIST.map(item => (
                     <button
                       key={item}
                       onClick={() => toggleItem('amenities', item)}
-                      className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-all ${
+                      className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                         formData.amenities.includes(item) 
-                          ? 'border-brand bg-brand/10 text-brand' 
-                          : 'border-[var(--border)] bg-[var(--bg)] text-[var(--text-secondary)]'
+                          ? 'bg-brand text-black shadow-lg shadow-brand/20' 
+                          : 'bg-[var(--bg)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-brand/50'
                       }`}
                     >
-                      <div className={`flex h-5 w-5 items-center justify-center rounded border ${
-                        formData.amenities.includes(item) ? 'bg-brand border-brand text-black' : 'border-[var(--border)]'
-                      }`}>
-                        {formData.amenities.includes(item) && <CheckCircle2 size={14} />}
-                      </div>
-                      <span className="text-sm font-medium">{item}</span>
+                      {formData.amenities.includes(item) ? <CheckCircle2 size={14} /> : <div className="h-3.5 w-3.5 rounded-full border border-[var(--border)]" />}
+                      {item}
                     </button>
                   ))}
                 </div>
@@ -839,23 +1001,19 @@ export const ListProperty: React.FC = () => {
 
               <div className="space-y-6">
                 <h3 className="text-lg font-bold text-[var(--text-primary)]">Nearby Facilities</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-wrap gap-2">
                   {NEARBY_FACILITIES_LIST.map(item => (
                     <button
                       key={item}
                       onClick={() => toggleItem('nearbyFacilities', item)}
-                      className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-all ${
+                      className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                         formData.nearbyFacilities.includes(item) 
-                          ? 'border-brand bg-brand/10 text-brand' 
-                          : 'border-[var(--border)] bg-[var(--bg)] text-[var(--text-secondary)]'
+                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                          : 'bg-[var(--bg)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-brand/50'
                       }`}
                     >
-                      <div className={`flex h-5 w-5 items-center justify-center rounded border ${
-                        formData.nearbyFacilities.includes(item) ? 'bg-brand border-brand text-black' : 'border-[var(--border)]'
-                      }`}>
-                        {formData.nearbyFacilities.includes(item) && <CheckCircle2 size={14} />}
-                      </div>
-                      <span className="text-sm font-medium">{item}</span>
+                      {formData.nearbyFacilities.includes(item) ? <CheckCircle2 size={14} /> : <div className="h-3.5 w-3.5 rounded-full border border-[var(--border)]" />}
+                      {item}
                     </button>
                   ))}
                 </div>
@@ -879,7 +1037,7 @@ export const ListProperty: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Property Description (Min 50 words) *</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">Property Description *</label>
                 <textarea 
                   name="description"
                   rows={6}
@@ -888,9 +1046,15 @@ export const ListProperty: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-[var(--text-primary)] focus:border-brand focus:outline-none"
                 />
-                <p className="text-xs text-[var(--text-secondary)]">
-                  Word count: {formData.description.split(/\s+/).filter(w => w.length > 0).length} / 50
-                </p>
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+                  <p>Auto-generated descriptions are more attractive to tenants.</p>
+                  <button 
+                    onClick={() => setFormData(prev => ({ ...prev, description: generateDefaultDescription() }))}
+                    className="text-brand hover:underline"
+                  >
+                    Regenerate
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-between">

@@ -47,6 +47,13 @@ export const QRResolverPage: React.FC = () => {
           const properties = await api.getPropertiesByOwnerId(qrData.ownerId);
           console.log('Found properties:', properties.length);
           
+          // Count the scan for all properties of this owner
+          try {
+            await Promise.all(properties.map(p => api.incrementPropertyStat(p.id, 'scans')));
+          } catch (statError) {
+            console.warn('Failed to increment scan counts:', statError);
+          }
+          
           if (properties.length === 1) {
             // Only one property, direct to details
             const p = properties[0];

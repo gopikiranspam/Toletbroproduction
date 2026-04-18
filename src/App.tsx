@@ -19,8 +19,20 @@ import { Property } from './types';
 import { api, testConnection } from './services/api';
 import { mapsService } from './services/mapsService';
 import { FilterModal, FilterState, SortOption } from './components/FilterModal';
-import { SlidersHorizontal, AlertCircle } from 'lucide-react';
+import { SlidersHorizontal, AlertCircle, Filter, X as CloseIcon } from 'lucide-react';
 import { useRef } from 'react';
+import { PreferenceModal } from './components/PreferenceModal';
+import { useLocation } from 'react-router-dom';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 // Pages
 import { QRSetupPage } from './pages/QRSetupPage';
@@ -57,9 +69,10 @@ const HomePage = () => {
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [viewAllNearby, setViewAllNearby] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isPreferenceModalOpen, setIsPreferenceModalOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     rentRange: [0, 200000],
-    distanceRange: 50,
+    distanceRange: 100,
     bhkTypes: [],
     propertyTypes: ['All'],
     locality: '',
@@ -85,6 +98,11 @@ const HomePage = () => {
     if (user?.role === 'OWNER') {
       navigate('/dashboard');
     }
+
+    // Show preference modal if user is logged in but has no preferences
+    if (user && user.role === 'FINDER' && !user.preferences) {
+      setIsPreferenceModalOpen(true);
+    }
   }, [user, navigate]);
 
   useEffect(() => {
@@ -106,7 +124,7 @@ const HomePage = () => {
           setTimeout(async () => {
             try {
               const pos = await mapsService.getCurrentLocation();
-              const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, 50);
+              const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, 100);
               setNearbyProperties(nearby);
             } catch (err) {
               console.log("Initial nearby search failed:", err);
@@ -129,7 +147,7 @@ const HomePage = () => {
 
   const handleNearbySearch = async (radius?: number) => {
     setNearbyLoading(true);
-    const searchRadius = radius || 50;
+    const searchRadius = radius || 100;
     try {
       const pos = await mapsService.getCurrentLocation();
       const nearby = await api.getNearbyProperties(pos.coords.latitude, pos.coords.longitude, searchRadius);
@@ -154,6 +172,12 @@ const HomePage = () => {
     }
   };
 
+  const handleSavePreferences = async (prefs: any) => {
+    if (user?.id) {
+      await api.updateUserPreferences(user.id, prefs);
+    }
+  };
+
   const suggestedProperties = useMemo(() => {
     return properties.filter(p => p.isFeatured).slice(0, 6);
   }, [properties]);
@@ -168,8 +192,9 @@ const HomePage = () => {
       const matchesBHK = filters.bhkTypes.length === 0 || filters.bhkTypes.includes(p.bhkType as any);
       const matchesType = filters.propertyTypes.includes('All') || filters.propertyTypes.includes(p.type as any);
       const matchesLocality = !filters.locality || 
-        p.area.toLowerCase().includes(filters.locality.toLowerCase()) ||
-        p.city.toLowerCase().includes(filters.locality.toLowerCase());
+        p.locality?.toLowerCase().includes(filters.locality.toLowerCase()) ||
+        p.area?.toLowerCase().includes(filters.locality.toLowerCase()) ||
+        p.city?.toLowerCase().includes(filters.locality.toLowerCase());
       
       return matchesRent && matchesBHK && matchesType && matchesLocality;
     });
@@ -183,18 +208,72 @@ const HomePage = () => {
         result.sort((a, b) => (b.rent || 0) - (a.rent || 0));
         break;
       case 'distance':
-        // Assuming distance is available, if not sort by ID or something
-        // For now, let's assume api returns distance
         result.sort((a, b) => (a.distance || 0) - (b.distance || 0));
         break;
       case 'recommended':
       default:
-        // No specific sort for recommended, keep as is
+        // If user has preferences, prioritize them
+        if (user?.preferences) {
+          result.sort((a, b) => {
+            let scoreA = 0;
+            let scoreB = 0;
+            
+            if (user.preferences?.category === a.category) scoreA += 10;
+            if (user.preferences?.category === b.category) scoreB += 10;
+            
+            if (user.preferences?.bhkType === a.bhkType) scoreA += 5;
+            if (user.preferences?.bhkType === b.bhkType) scoreB += 5;
+            
+            if (user.preferences?.propertyType === a.type) scoreA += 3;
+            if (user.preferences?.propertyType === b.type) scoreB += 3;
+            
+            // If scores are equal, sort by distance
+            if (scoreA === scoreB) {
+              return (a.distance || 0) - (b.distance || 0);
+            }
+            return scoreB - scoreA;
+          });
+        } else {
+          result.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+        }
         break;
     }
 
     return result;
-  }, [nearbyProperties, filters]);
+  }, [nearbyProperties, filters, user?.preferences]);
+
+  const { preferredNearby, otherNearby } = useMemo(() => {
+    if (!user?.preferences) return { preferredNearby: [], otherNearby: filteredNearbyProperties };
+    
+    const preferred = filteredNearbyProperties.filter(p => {
+      const matchesCategory = !user.preferences?.category || p.category === user.preferences.category;
+      const matchesBHK = !user.preferences?.bhkType || p.bhkType === user.preferences.bhkType;
+      const matchesType = !user.preferences?.propertyType || p.type === user.preferences.propertyType;
+      return matchesCategory || matchesBHK || matchesType;
+    });
+    
+    const preferredIds = new Set(preferred.map(p => p.id));
+    const others = filteredNearbyProperties.filter(p => !preferredIds.has(p.id));
+    
+    return { preferredNearby: preferred, otherNearby: others };
+  }, [filteredNearbyProperties, user?.preferences]);
+
+  const activePreferenceTags = useMemo(() => {
+    if (!user?.preferences) return [];
+    const tags = [];
+    if (user.preferences.category) tags.push({ id: 'category', label: user.preferences.category });
+    if (user.preferences.bhkType) tags.push({ id: 'bhkType', label: user.preferences.bhkType });
+    if (user.preferences.propertyType) tags.push({ id: 'propertyType', label: user.preferences.propertyType });
+    return tags;
+  }, [user?.preferences]);
+
+  const removePreference = async (id: string) => {
+    if (user?.id && user.preferences) {
+      const newPrefs = { ...user.preferences };
+      delete (newPrefs as any)[id];
+      await api.updateUserPreferences(user.id, newPrefs);
+    }
+  };
 
   const recommendedProperties = useMemo(() => {
     // Properties in other locations (not Hyderabad if nearby is Hyderabad)
@@ -266,7 +345,7 @@ const HomePage = () => {
       <Hero />
       <SearchSection onNearbySearch={handleNearbySearch} isNearbyLoading={nearbyLoading} />
 
-      <div className="mx-auto max-w-7xl px-6 py-20 space-y-24">
+      <div className="mx-auto max-w-7xl px-6 py-12 space-y-16">
         {/* Nearby Properties Section */}
         {nearbyProperties.length > 0 && (
           <section id="nearby-section" className="space-y-8">
@@ -287,10 +366,30 @@ const HomePage = () => {
                   </button>
                 </div>
                 <h2 className="text-2xl font-bold tracking-tight md:text-4xl text-[var(--text-primary)]">
-                  Properties <span className="text-brand">Nearby</span> You
+                  Preferred <span className="text-brand">Nearby</span> properties
                 </h2>
-                <p className="mt-2 text-sm text-[var(--text-secondary)]">Exclusive listings within 50km of your current location.</p>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">Exclusive listings within 100km of your current location.</p>
                 
+                {/* Preference Tags */}
+                {activePreferenceTags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {activePreferenceTags.map((tag) => (
+                      <div 
+                        key={tag.id}
+                        className="flex items-center gap-2 rounded-full bg-brand/10 px-3 py-1 text-[10px] font-bold text-brand"
+                      >
+                        <span>{tag.label}</span>
+                        <button 
+                          onClick={() => removePreference(tag.id)}
+                          className="rounded-full p-0.5 hover:bg-brand hover:text-black transition-colors"
+                        >
+                          <CloseIcon size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Mobile Filter Button - Placed after text, aligned to right */}
                 <div className="mt-4 flex md:hidden justify-end">
                   <button 
@@ -338,12 +437,35 @@ const HomePage = () => {
             </div>
 
             {viewAllNearby ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                <AnimatePresence mode="popLayout">
-                  {filteredNearbyProperties.map((property) => (
-                    <PropertyCard key={property.id} property={property} />
-                  ))}
-                </AnimatePresence>
+              <div className="space-y-12">
+                {preferredNearby.length > 0 && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+                      <Sparkles size={18} className="text-brand" />
+                      Matches Your Preferences
+                    </h3>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      <AnimatePresence mode="popLayout">
+                        {preferredNearby.map((property) => (
+                          <PropertyCard key={property.id} property={property} />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                )}
+
+                {otherNearby.length > 0 && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">All Nearby properties</h3>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      <AnimatePresence mode="popLayout">
+                        {otherNearby.map((property) => (
+                          <PropertyCard key={property.id} property={property} />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div 
@@ -364,7 +486,7 @@ const HomePage = () => {
                 <button 
                   onClick={() => setFilters({
                     rentRange: [0, 200000],
-                    distanceRange: 50,
+                    distanceRange: 100,
                     bhkTypes: [],
                     propertyTypes: ['All'],
                     locality: '',
@@ -525,6 +647,7 @@ const HomePage = () => {
       <FilterModal 
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
+        properties={properties}
         onApply={(newFilters) => {
           setFilters(newFilters);
           setIsFilterModalOpen(false);
@@ -534,6 +657,12 @@ const HomePage = () => {
           }
         }}
         initialFilters={filters}
+      />
+
+      <PreferenceModal 
+        isOpen={isPreferenceModalOpen}
+        onClose={() => setIsPreferenceModalOpen(false)}
+        onSave={handleSavePreferences}
       />
     </main>
   );
@@ -555,6 +684,7 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] selection:bg-brand selection:text-black transition-colors duration-300">
+      <ScrollToTop />
       <Navbar onOpenAuth={() => openAuth('USER')} />
       
       <Outlet />

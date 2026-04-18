@@ -29,6 +29,7 @@ export interface Property {
   bhkType: BHKType;
   furnishing: FurnishingType;
   locality: string;
+  area?: string;
   fullAddress: string;
   state: string;
   city: string;
@@ -73,6 +74,12 @@ export interface Property {
   createdAt: string;
 }
 
+export interface UserPreferences {
+  category?: PropertyCategory;
+  bhkType?: BHKType;
+  propertyType?: PropertyType;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -88,6 +95,7 @@ export interface User {
   qrId?: string;
   favorites?: string[];
   privacy?: PrivacySettings;
+  preferences?: UserPreferences;
 }
 
 export interface Order {

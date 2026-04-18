@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, RotateCcw, ChevronDown } from 'lucide-react';
-import { BHKType, PropertyType } from '../types';
+import { X, Check, RotateCcw, ChevronDown, MapPin, Search } from 'lucide-react';
+import { BHKType, PropertyType, Property } from '../types';
 
 export type SortOption = 'recommended' | 'price-low-high' | 'price-high-low' | 'distance';
 
@@ -20,6 +20,7 @@ interface FilterModalProps {
   onApply: (filters: FilterState) => void;
   initialFilters: FilterState;
   showDistance?: boolean;
+  properties?: Property[];
 }
 
 const BHK_OPTIONS: BHKType[] = ['1 RK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK'];
@@ -30,9 +31,25 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onClose, 
   onApply, 
   initialFilters,
-  showDistance = true
+  showDistance = true,
+  properties = []
 }) => {
   const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [isLocalityOpen, setIsLocalityOpen] = useState(false);
+  const [localitySearch, setLocalitySearch] = useState('');
+
+  const localities = useMemo(() => {
+    const set = new Set<string>();
+    properties.forEach(p => {
+      if (p.locality) set.add(p.locality);
+      if (p.area) set.add(p.area);
+    });
+    return Array.from(set).sort();
+  }, [properties]);
+
+  const filteredLocalities = useMemo(() => {
+    return localities.filter(l => l.toLowerCase().includes(localitySearch.toLowerCase()));
+  }, [localities, localitySearch]);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,7 +60,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   const handleReset = () => {
     setFilters({
       rentRange: [0, 1000000],
-      distanceRange: 50,
+      distanceRange: 100,
       bhkTypes: [],
       propertyTypes: ['All'],
       locality: '',
@@ -231,13 +248,68 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {/* Locality */}
                 <div className="space-y-4">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Locality / Area</label>
-                  <input 
-                    type="text"
-                    value={filters.locality}
-                    onChange={(e) => setFilters(prev => ({ ...prev, locality: e.target.value }))}
-                    placeholder="Search locality..."
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-4 text-sm text-[var(--text-primary)] focus:border-brand focus:outline-none"
-                  />
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsLocalityOpen(!isLocalityOpen)}
+                      className="flex w-full items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-4 text-sm text-[var(--text-primary)] transition-all hover:border-brand/50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <MapPin size={16} className="text-brand" />
+                        <span>{filters.locality || 'Select Locality'}</span>
+                      </div>
+                      <ChevronDown size={16} className={`transition-transform ${isLocalityOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {isLocalityOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute left-0 right-0 z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-2 shadow-xl no-scrollbar"
+                        >
+                          <div className="sticky top-0 z-10 mb-2 bg-[var(--card-bg)] pb-2">
+                            <div className="relative">
+                              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
+                              <input
+                                type="text"
+                                value={localitySearch}
+                                onChange={(e) => setLocalitySearch(e.target.value)}
+                                placeholder="Search locality..."
+                                className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] py-2 pl-9 pr-4 text-xs text-[var(--text-primary)] focus:border-brand focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <button
+                              onClick={() => {
+                                setFilters(prev => ({ ...prev, locality: '' }));
+                                setIsLocalityOpen(false);
+                              }}
+                              className={`w-full rounded-xl px-4 py-2 text-left text-xs transition-colors hover:bg-white/5 ${!filters.locality ? 'bg-brand/10 text-brand' : 'text-[var(--text-secondary)]'}`}
+                            >
+                              All Localities
+                            </button>
+                            {filteredLocalities.map((loc) => (
+                              <button
+                                key={loc}
+                                onClick={() => {
+                                  setFilters(prev => ({ ...prev, locality: loc }));
+                                  setIsLocalityOpen(false);
+                                }}
+                                className={`w-full rounded-xl px-4 py-2 text-left text-xs transition-colors hover:bg-white/5 ${filters.locality === loc ? 'bg-brand/10 text-brand' : 'text-[var(--text-secondary)]'}`}
+                              >
+                                {loc}
+                              </button>
+                            ))}
+                            {filteredLocalities.length === 0 && (
+                              <div className="py-4 text-center text-[10px] text-[var(--text-secondary)]">No localities found</div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
             </div>

@@ -34,6 +34,7 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasLinkedQR, setHasLinkedQR] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; propertyId: string | null }>({
     isOpen: false,
     propertyId: null
@@ -58,8 +59,12 @@ export const Dashboard: React.FC = () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const data = await api.getPropertiesByOwnerId(user.id, true);
-      setProperties(data);
+      const [propertyData, qrData] = await Promise.all([
+        api.getPropertiesByOwnerId(user.id, true),
+        api.getQRByOwnerId(user.id)
+      ]);
+      setProperties(propertyData);
+      setHasLinkedQR(!!qrData && qrData.status === 'LINKED');
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
@@ -93,7 +98,7 @@ export const Dashboard: React.FC = () => {
   const totalStats = activeProperties.reduce((acc, p) => ({
     scans: acc.scans + (p.scans || 0) + (p.internalScans || 0),
     views: acc.views + (p.views || 0),
-    favorites: acc.favorites + (p.favoritesCount || 0),
+    favorites: acc.favorites + Math.max(0, p.favoritesCount || 0),
     shares: acc.shares + (p.shares || 0),
     calls: acc.calls + (p.callClicks || 0),
     messages: acc.messages + (p.messageClicks || 0),
@@ -153,47 +158,49 @@ export const Dashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Smart Tolet Board Order Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-[2.5rem] border border-brand/30 bg-gradient-to-br from-brand/10 via-transparent to-brand/5 p-8 shadow-xl shadow-brand/5"
-        >
-          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-6">
-              <h3 className="text-3xl font-bold text-[var(--text-primary)]">Why <span className="text-brand">Smart Tolet Board?</span></h3>
-              
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-[var(--text-secondary)]">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-brand" />
-                  <span>Hide your number & avoid unnecessary calls</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BarChart3 size={16} className="text-brand" />
-                  <span>See how many people viewed your property</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <PhoneCall size={16} className="text-brand" />
-                  <span>Get only interested tenants calling you</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Zap size={16} className="text-brand" />
-                  <span>Promote your listing & get tenants faster</span>
+        {/* Smart Tolet Board Order Section - Only show if not already linked */}
+        {!hasLinkedQR && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-[2.5rem] border border-brand/30 bg-gradient-to-br from-brand/10 via-transparent to-brand/5 p-8 shadow-xl shadow-brand/5"
+          >
+            <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-6">
+                <h3 className="text-3xl font-bold text-[var(--text-primary)]">Why <span className="text-brand">Smart Tolet Board?</span></h3>
+                
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-[var(--text-secondary)]">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-brand" />
+                    <span>Hide your number & avoid unnecessary calls</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={16} className="text-brand" />
+                    <span>See how many people viewed your property</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <PhoneCall size={16} className="text-brand" />
+                    <span>Get only interested tenants calling you</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Zap size={16} className="text-brand" />
+                    <span>Promote your listing & get tenants faster</span>
+                  </div>
                 </div>
               </div>
+              <button 
+                onClick={() => navigate('/order-board')}
+                className="group flex h-14 items-center justify-center gap-3 rounded-2xl bg-brand px-10 text-base font-bold text-black shadow-lg shadow-brand/20 transition-all hover:scale-105 active:scale-95"
+              >
+                Order Now
+                <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
+              </button>
             </div>
-            <button 
-              onClick={() => navigate('/order-board')}
-              className="group flex h-14 items-center justify-center gap-3 rounded-2xl bg-brand px-10 text-base font-bold text-black shadow-lg shadow-brand/20 transition-all hover:scale-105 active:scale-95"
-            >
-              Order Now
-              <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
-          {/* Decorative background elements */}
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-brand/5 blur-2xl" />
-        </motion.div>
+            {/* Decorative background elements */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-brand/5 blur-2xl" />
+          </motion.div>
+        )}
 
           {/* Insights Section */}
           <section className="space-y-6">

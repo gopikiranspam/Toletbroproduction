@@ -63,6 +63,10 @@ export const AdminDashboard: React.FC = () => {
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.email === 'gopikiranspam@gmail.com';
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
+
+  useEffect(() => {
     if (isAuthReady && isAdmin) {
       fetchData();
     }

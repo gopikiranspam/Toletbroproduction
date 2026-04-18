@@ -19,7 +19,9 @@ import {
   Download,
   Building2,
   Printer,
-  Layout
+  Layout,
+  Search,
+  MapPin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -396,109 +398,127 @@ export const OwnerQRDashboard: React.FC = () => {
 
 const BoardPreview: React.FC<{ bhk: string; floor: string; qrUrl: string; isPrint?: boolean }> = ({ bhk, floor, qrUrl, isPrint }) => {
   return (
-    <div className="flex flex-col h-full w-full bg-white text-black font-sans overflow-hidden border border-gray-100 shadow-2xl">
-      {/* Top Red Section */}
-      <div className="flex h-[30%] w-full bg-[#E31E24] text-white px-16 py-8 items-center justify-between relative overflow-hidden">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+    <div className="flex flex-col h-full w-full bg-white text-black font-sans overflow-hidden border-[12px] border-black rounded-[2rem] p-8 relative">
+      {/* Top Section */}
+      <div className="flex w-full border-b-4 border-black pb-6 mb-8">
+        <div className="w-2/3 flex items-center">
+          <h1 className="text-[12rem] font-[900] leading-none text-[#FF0000] tracking-tighter">TO-LET</h1>
         </div>
-        
-        <div className="relative z-10">
-          <h1 className="text-[14rem] font-black leading-none tracking-tighter italic drop-shadow-2xl">TO-LET</h1>
-        </div>
-        
-        <div className="flex flex-col gap-6 pr-8 relative z-10">
-          <div className="flex items-center gap-8">
-            <div className="w-40 h-28 bg-white rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.3)] transform -rotate-2">
-               <span className="text-black text-6xl font-black">{bhk || "—"}</span>
+        <div className="w-1/3 border-l-4 border-black pl-8 flex flex-col justify-center gap-8">
+          <div className="flex items-end gap-4">
+            <div className="flex-1 border-b-4 border-black pb-1 text-center">
+              <span className="text-6xl font-black">{bhk || ""}</span>
             </div>
-            <span className="text-7xl font-black italic tracking-tight">BHK</span>
+            <span className="text-6xl font-black text-[#FF0000]">BHK</span>
           </div>
-          <div className="flex items-center gap-8">
-            <div className="w-40 h-28 bg-white rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.3)] transform rotate-2">
-               <span className="text-black text-6xl font-black">{floor || "—"}</span>
+          <div className="flex items-end gap-4">
+            <div className="flex-1 border-b-4 border-black pb-1 text-center">
+              <span className="text-6xl font-black">{floor || ""}</span>
             </div>
-            <span className="text-7xl font-black italic tracking-tighter">FLOOR</span>
+            <span className="text-6xl font-black text-[#FF0000]">FLOOR</span>
           </div>
         </div>
       </div>
 
       {/* Middle Section */}
-      <div className="flex-1 flex flex-col items-center justify-center relative px-20 py-10">
-        <div className="text-center mb-12">
-           <p className="text-5xl font-black tracking-tight text-gray-900 mb-2">Scan, See Inside & Contact Owner</p>
-           <div className="h-1.5 w-48 bg-[#00A651] mx-auto rounded-full"></div>
-           <p className="text-2xl font-bold mt-4 text-gray-600 uppercase tracking-widest">Scan once see all other tolets near you</p>
+      <div className="flex-1 flex flex-col">
+        <div className="text-center mb-10">
+          <h2 className="text-6xl font-black tracking-tight mb-2">
+            Scan, See Inside and <span className="underline decoration-8 underline-offset-8">Contact Owner</span>
+          </h2>
+          <p className="text-4xl font-bold text-gray-800 mt-4">
+            స్కాన్ చేయండి, లోపల ఎలా ఉందో చూడండి, మీకు నచ్చితేనే ఓనర్ కి కాల్ చేయండి
+          </p>
         </div>
 
-        <div className="flex w-full items-center justify-between gap-12">
-           {/* Left Text */}
-           <div className="w-[30%] text-center space-y-6">
-              <div className="space-y-2">
-                <p className="text-2xl font-medium text-gray-500 uppercase tracking-tighter">Option 1</p>
-                <p className="text-3xl font-black leading-tight text-gray-900">Use your mobile Camera or Google Lens</p>
+        <div className="flex flex-1 items-center justify-between px-4">
+          {/* Left Column */}
+          <div className="w-[30%] space-y-8">
+            <h3 className="text-2xl font-bold text-gray-700 mb-4">Use Any of below:</h3>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 border-2 border-black rounded-full">
+                  <Smartphone size={32} />
+                </div>
+                <p className="text-2xl font-bold">Use your Mobile Camera (or)</p>
               </div>
               <div className="flex items-center gap-4">
-                <div className="h-[2px] flex-1 bg-gray-200"></div>
-                <span className="text-xl font-bold text-gray-400 italic">OR</span>
-                <div className="h-[2px] flex-1 bg-gray-200"></div>
+                <div className="p-3 border-2 border-black rounded-full">
+                  <Layout size={32} />
+                </div>
+                <p className="text-2xl font-bold">Open Google Lense & Scan (or)</p>
               </div>
-              <div className="space-y-2">
-                <p className="text-2xl font-medium text-gray-500 uppercase tracking-tighter">Option 2</p>
-                <p className="text-3xl font-black leading-tight text-gray-900">Simply visit<br/><span className="text-[#E31E24]">www.ToletBro.com</span></p>
+              <div className="flex items-center gap-4">
+                <div className="p-3 border-2 border-black rounded-full">
+                  <Search size={32} />
+                </div>
+                <p className="text-2xl font-bold">Visit : www.toletbro.com</p>
               </div>
-           </div>
+            </div>
+          </div>
 
-           {/* QR Code with Modern Frame */}
-           <div className="relative p-16 bg-gray-50 rounded-[3rem] shadow-inner">
-              {/* Modern Scanner Corners */}
-              <div className="absolute top-4 left-4 w-24 h-24 border-t-[16px] border-l-[16px] border-[#00A651] rounded-tl-3xl"></div>
-              <div className="absolute top-4 right-4 w-24 h-24 border-t-[16px] border-r-[16px] border-[#00A651] rounded-tr-3xl"></div>
-              <div className="absolute bottom-4 left-4 w-24 h-24 border-b-[16px] border-l-[16px] border-[#00A651] rounded-bl-3xl"></div>
-              <div className="absolute bottom-4 right-4 w-24 h-24 border-b-[16px] border-r-[16px] border-[#00A651] rounded-br-3xl"></div>
+          {/* Center QR Section */}
+          <div className="relative flex flex-col items-center">
+            {/* Scan Me Bubble */}
+            <div className="absolute -top-16 -left-16 z-10">
+              <div className="bg-black text-white px-6 py-3 rounded-2xl font-black text-3xl flex flex-col items-center relative">
+                <span>SCAN</span>
+                <span>ME!</span>
+                <div className="absolute -bottom-3 right-4 w-6 h-6 bg-black rotate-45"></div>
+              </div>
+            </div>
+
+            <div className="relative p-12">
+              {/* Corners */}
+              <div className="absolute top-0 left-0 w-24 h-24 border-t-[12px] border-l-[12px] border-black rounded-tl-3xl"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 border-t-[12px] border-r-[12px] border-black rounded-tr-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 border-b-[12px] border-l-[12px] border-black rounded-bl-3xl"></div>
+              <div className="absolute bottom-0 right-0 w-24 h-24 border-b-[12px] border-r-[12px] border-black rounded-br-3xl"></div>
               
-              <div className="bg-white p-4 rounded-2xl shadow-2xl">
-                <QRCodeSVG value={qrUrl} size={isPrint ? 300 : 220} level="H" includeMargin={false} />
+              <div className="bg-white p-2">
+                <QRCodeSVG value={qrUrl} size={isPrint ? 320 : 240} level="H" includeMargin={false} />
               </div>
-           </div>
+            </div>
+          </div>
 
-           {/* Right Text (Telugu) */}
-           <div className="w-[30%] text-center">
-              <div className="bg-gray-50 p-8 rounded-3xl border-2 border-dashed border-gray-200">
-                <p className="text-4xl font-bold leading-[1.6] text-gray-900">
-                  స్కాన్ చేయండి, లోపల ఎలా ఉందో చూడండి,<br />
-                  <span className="text-[#00A651]">మీకు నచ్చితేనే ఓనర్ కి కాల్ చేయండి</span>
-                </p>
+          {/* Right Column */}
+          <div className="w-[30%] space-y-8">
+            <h3 className="text-2xl font-bold text-gray-700 mb-4">You will quickly find below :</h3>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 border-2 border-black rounded-full">
+                  <Camera size={32} />
+                </div>
+                <p className="text-2xl font-bold">See Inside house images</p>
               </div>
-           </div>
+              <div className="flex items-center gap-4">
+                <div className="p-3 border-2 border-black rounded-full">
+                  <Download size={32} />
+                </div>
+                <p className="text-2xl font-bold">Rent & Deposite Amount details</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-3 border-2 border-black rounded-full">
+                  <MapPin size={32} />
+                </div>
+                <p className="text-2xl font-bold">Find more To-lets near you</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Bottom Section */}
-      <div className="w-full flex flex-col items-center mt-auto pb-8">
-        <div className="w-[92%] h-1 bg-gray-100 mb-6"></div>
-        <div className="flex items-center gap-6 mb-6">
-          <div className="h-12 w-1 bg-[#E31E24]"></div>
-          <h2 className="text-[6rem] font-black tracking-tighter text-black uppercase leading-none">SMART TOLET BOARDS</h2>
-          <div className="h-12 w-1 bg-[#00A651]"></div>
+      <div className="mt-8 border-t-4 border-black pt-6 flex flex-col items-center">
+        <div className="flex items-center gap-4 mb-4">
+          <h2 className="text-6xl font-[900] tracking-tighter">SMART TOLET BOARDS</h2>
+          <span className="text-2xl font-bold text-gray-600">Powered by Toletbro.com</span>
         </div>
         
-        <div className="w-full bg-[#00A651] py-6 text-center shadow-lg relative overflow-hidden">
-           <div className="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,transparent_25%,white_25%,white_50%,transparent_50%,transparent_75%,white_75%,white_100%)] bg-[length:20px_20px]"></div>
-           <p className="text-white text-5xl font-black tracking-widest relative z-10">POWERED BY TOLETBRO.COM</p>
-        </div>
-        
-        <div className="pt-8 px-16 w-full flex justify-between items-center text-gray-500">
-          <p className="text-2xl font-bold">
-            Order your board at <span className="text-black">www.toletbro.com</span>
+        <div className="w-full bg-[#444444] rounded-2xl py-4 px-8 flex justify-center items-center text-white">
+          <p className="text-3xl font-bold">
+            If you want to order "Smart Tolet Board" Visit to www.toletbro.com | Contact: +91 8500482405
           </p>
-          <div className="flex items-center gap-4">
-            <span className="h-8 w-[2px] bg-gray-300"></span>
-            <p className="text-2xl font-bold">
-              Support: <span className="text-black">8500482405</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>

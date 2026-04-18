@@ -43,6 +43,17 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Hide number input arrows */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

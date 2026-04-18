@@ -123,12 +123,29 @@ export const api = {
   getPropertiesByLocation: async (city: string, area?: string): Promise<Property[]> => {
     const path = 'properties';
     try {
-      const q = query(collection(db, path), where('location', '>=', city), where('location', '<=', city + '\uf8ff'));
-      const snapshot = await getDocs(q);
+      // Fetch all properties and filter client-side for better flexibility with partial matches
+      const snapshot = await getDocs(collection(db, path));
       let results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property));
       
+      // Filter by active and not deleted
+      results = results.filter(p => p.isActive === true && !p.isDeleted);
+
+      if (city && city.toLowerCase() !== 'all') {
+        results = results.filter(p => 
+          p.city?.toLowerCase().includes(city.toLowerCase()) || 
+          p.location?.toLowerCase().includes(city.toLowerCase()) ||
+          p.state?.toLowerCase().includes(city.toLowerCase())
+        );
+      }
+      
       if (area) {
-        results = results.filter(p => p.location.toLowerCase().includes(area.toLowerCase()));
+        results = results.filter(p => 
+          p.locality?.toLowerCase().includes(area.toLowerCase()) ||
+          p.area?.toLowerCase().includes(area.toLowerCase()) ||
+          p.location?.toLowerCase().includes(area.toLowerCase()) ||
+          p.title?.toLowerCase().includes(area.toLowerCase()) ||
+          p.description?.toLowerCase().includes(area.toLowerCase())
+        );
       }
       
       return results;
@@ -136,6 +153,12 @@ export const api = {
       handleFirestoreError(error, 'list' as any, path);
       return [];
     }
+  },
+
+  uploadImage: async (propertyId: string, image: File): Promise<string> => {
+    const storageRef = ref(storage, `properties/${propertyId}/${Date.now()}-${image.name}`);
+    const uploadResult = await uploadBytes(storageRef, image);
+    return await getDownloadURL(uploadResult.ref);
   },
 
   createProperty: async (propertyData: Omit<Property, 'id' | 'createdAt'>, images: File[]): Promise<string> => {
@@ -480,6 +503,15 @@ export const api = {
   },
 
   // Admin APIs
+  updateUserPreferences: async (userId: string, preferences: any): Promise<void> => {
+    const path = `users/${userId}`;
+    try {
+      await updateDoc(doc(db, 'users', userId), { preferences });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  },
+
   getUsers: async (): Promise<User[]> => {
     const path = 'users';
     try {

@@ -48,31 +48,35 @@ export const SearchPage: React.FC = () => {
   const filteredProperties = properties.filter(p => {
     const matchesType = selectedType === 'All' ? true : p.type === selectedType;
     
-    const rent = p.rent || 0;
+    const rent = p.rent || p.price || 0;
     const matchesRent = rent >= filters.rentRange[0] && rent <= filters.rentRange[1];
     const matchesBHK = filters.bhkTypes.length === 0 || filters.bhkTypes.includes(p.bhkType as any);
     const matchesPropertyType = filters.propertyTypes.includes('All') || filters.propertyTypes.includes(p.type as any);
     const matchesLocality = !filters.locality || 
-      p.area.toLowerCase().includes(filters.locality.toLowerCase()) ||
-      p.city.toLowerCase().includes(filters.locality.toLowerCase());
+      p.locality?.toLowerCase().includes(filters.locality.toLowerCase()) ||
+      p.area?.toLowerCase().includes(filters.locality.toLowerCase()) ||
+      p.city?.toLowerCase().includes(filters.locality.toLowerCase());
 
     return matchesType && matchesRent && matchesBHK && matchesPropertyType && matchesLocality;
   });
 
   // Apply Sorting
+  const sortedProperties = [...filteredProperties];
   if (filters.sortBy !== 'recommended') {
-    filteredProperties.sort((a, b) => {
-      if (filters.sortBy === 'price-low-high') return (a.rent || 0) - (b.rent || 0);
-      if (filters.sortBy === 'price-high-low') return (b.rent || 0) - (a.rent || 0);
+    sortedProperties.sort((a, b) => {
+      const rentA = a.rent || a.price || 0;
+      const rentB = b.rent || b.price || 0;
+      if (filters.sortBy === 'price-low-high') return rentA - rentB;
+      if (filters.sortBy === 'price-high-low') return rentB - rentA;
       if (filters.sortBy === 'distance') return (a.distance || 0) - (b.distance || 0);
       return 0;
     });
   }
 
-  if (loading || (properties.length === 1)) return (
+  if (loading) return (
     <div className="flex h-screen flex-col items-center justify-center gap-4 text-[var(--text-primary)] bg-[var(--bg)]">
       <Loader2 className="h-12 w-12 animate-spin text-brand" />
-      <p className="text-[var(--text-secondary)]/50">{properties.length === 1 ? 'Redirecting to property...' : 'Searching properties...'}</p>
+      <p className="text-[var(--text-secondary)]/50">Searching properties...</p>
     </div>
   );
 
@@ -80,8 +84,8 @@ export const SearchPage: React.FC = () => {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "name": `Properties in ${area ? `${area}, ` : ''}${city}`,
-    "description": `Find the best properties for rent in ${area ? `${area}, ` : ''}${city}. Browse ${filteredProperties.length} listings on TOLETBRO.`,
-    "itemListElement": filteredProperties.map((p, index) => ({
+    "description": `Find the best properties for rent in ${area ? `${area}, ` : ''}${city}. Browse ${sortedProperties.length} listings on TOLETBRO.`,
+    "itemListElement": sortedProperties.map((p, index) => ({
       "@type": "ListItem",
       "position": index + 1,
       "url": `${window.location.origin}/property/${p.slug || p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${p.id}`
@@ -92,7 +96,7 @@ export const SearchPage: React.FC = () => {
     <div className="mx-auto max-w-7xl px-6 py-12">
       <SEO 
         title={`Flats for Rent in ${area ? `${area}, ` : ''}${city} | No Brokerage`}
-        description={`Find the best ${area ? `${area}` : city} properties for rent. Browse ${filteredProperties.length} verified listings on TOLETBRO. Smart Tolet Boards for direct owner contact.`}
+        description={`Find the best ${area ? `${area}` : city} properties for rent. Browse ${sortedProperties.length} verified listings on TOLETBRO. Smart Tolet Boards for direct owner contact.`}
         schema={structuredData}
       />
       <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -104,7 +108,7 @@ export const SearchPage: React.FC = () => {
           <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-[var(--text-primary)]">
             Properties in {area ? `${area}, ` : ''}{city}
           </h1>
-          <p className="mt-2 text-[var(--text-secondary)]">Found {filteredProperties.length} properties matching your search.</p>
+          <p className="mt-2 text-[var(--text-secondary)]">Found {sortedProperties.length} properties matching your search.</p>
         </div>
         
         <button 
@@ -121,12 +125,12 @@ export const SearchPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredProperties.map((property) => (
+        {sortedProperties.map((property) => (
           <PropertyCard key={property.id} property={property} />
         ))}
       </div>
 
-      {filteredProperties.length === 0 && (
+      {sortedProperties.length === 0 && (
         <div className="flex flex-col items-center justify-center py-32 text-center">
           <p className="text-xl text-[var(--text-secondary)]/40">No properties found matching your filters.</p>
           <button 
@@ -134,7 +138,7 @@ export const SearchPage: React.FC = () => {
               setSelectedType('All');
               setFilters({
                 rentRange: [0, 200000],
-                distanceRange: 50,
+                distanceRange: 100,
                 bhkTypes: [],
                 propertyTypes: ['All'],
                 locality: '',
@@ -151,9 +155,11 @@ export const SearchPage: React.FC = () => {
       <FilterModal 
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
+        properties={properties}
         onApply={(newFilters) => {
           setFilters(newFilters);
           setIsFilterModalOpen(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         initialFilters={filters}
         showDistance={false}

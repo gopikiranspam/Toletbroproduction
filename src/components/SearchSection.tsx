@@ -21,7 +21,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({ onNearbySearch, is
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedLocality, setSelectedLocality] = useState('');
-  const [radius, setRadius] = useState('5');
+  const [radius, setRadius] = useState('100');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +31,8 @@ export const SearchSection: React.FC<SearchSectionProps> = ({ onNearbySearch, is
       navigate(`/search/Hyderabad/${selectedLocality}`);
     }
   };
+
+  const propertyTypes = ['Independent House', 'Apartment', 'Standalone Building', 'Hostel', 'Commercial'];
 
   return (
     <section className="relative -mt-12 z-20 px-6">
@@ -158,7 +160,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({ onNearbySearch, is
                     <input
                       type="range"
                       min="1"
-                      max="50"
+                      max="100"
                       value={radius}
                       onChange={(e) => setRadius(e.target.value)}
                       className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-[var(--bg)] accent-brand"
@@ -171,10 +173,11 @@ export const SearchSection: React.FC<SearchSectionProps> = ({ onNearbySearch, is
                       Property Type
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {['Apartment', 'Villa', 'Office', 'Plot'].map(type => (
+                      {propertyTypes.map(type => (
                         <button
                           key={type}
                           type="button"
+                          onClick={() => navigate(`/search/Hyderabad/${type}`)}
                           className="rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-[10px] font-bold text-[var(--text-secondary)] transition-all hover:border-brand/50 hover:text-brand"
                         >
                           {type}
