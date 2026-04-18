@@ -249,30 +249,26 @@ export const ListProperty: React.FC = () => {
 
   const generateDefaultDescription = () => {
     const furnishingText = formData.furnishing === 'Unfurnished' ? 'non-furnished' : formData.furnishing.toLowerCase();
-    const balconyText = Math.random() > 0.5 ? ' and features a beautiful balcony view' : '';
+    const balconyText = Math.random() > 0.5 ? ' with a balcony' : '';
     
     if (formData.category === 'Rent') {
-      return `Welcome to your new home! This spacious and well-lit ${formData.bhkType} ${formData.type} is perfectly situated in the heart of ${formData.locality}, ${formData.city}. 
+      return `A well-lit ${formData.bhkType} ${formData.type} in ${formData.locality}, ${formData.city}.
 
-This ${furnishingText} property is designed for comfort and convenience, offering ${formData.bathrooms} modern bathrooms and a generous built-up area of ${formData.sqft || '...'} sq ft${balconyText}. Located on floor ${formData.floorNumber || '...'} of ${formData.totalFloors || '...'}, it provides a peaceful living environment while being close to all essential urban amenities.
+This ${furnishingText} home offers ${formData.bathrooms} bathrooms and a built-up area of ${formData.sqft || '...'} sq ft${balconyText}. Located on floor ${formData.floorNumber || '...'} of ${formData.totalFloors || '...'}, it is close to all essential amenities.
 
-Key Highlights:
-• Preferred for: ${formData.preferredTenant}
-• Monthly Rent: ₹${formData.rent || '...'}
-• Availability: Ready to move in from ${formData.availableFrom}
-
-Whether you're a family looking for a stable home or a professional seeking convenience, this property is an excellent choice for anyone who values quality living.`;
+Key Details:
+• Preferred: ${formData.preferredTenant}
+• Rent: ₹${formData.rent || '...'}
+• Available from: ${formData.availableFrom}`;
     } else {
-      return `Prime Investment Opportunity: A stunning ${formData.bhkType} ${formData.type} is now available for sale in the sought-after locality of ${formData.locality}, ${formData.city}. 
+      return `Stunning ${formData.bhkType} ${formData.type} for sale in ${formData.locality}, ${formData.city}.
 
-This ${furnishingText} property boasts ${formData.sqft || '...'} sq ft of smarty-utilized built-up area, perfect for modern living. Situated on the ${formData.floorNumber || '...'} floor, the property offers great ventilation and natural light${balconyText}. 
+This ${furnishingText} property features ${formData.sqft || '...'} sq ft area on the ${formData.floorNumber || '...'} floor${balconyText}. It offers great ventilation and natural light.
 
-Why this property?
-• Excellent condition and ${formData.furnishing}
-• Clear titles and loan facility ${formData.loanAvailable ? 'available' : 'can be arranged'}
-• Strategically located in ${formData.locality} with high appreciation potential
-
-Don't miss out on this chance to own a premium piece of real estate in ${formData.city}. Ideal for both end-users and investors.`;
+Highlights:
+• Condition: ${formData.furnishing}
+• Loan facility: ${formData.loanAvailable ? 'Available' : 'Possible'}
+• Location: Highly accessible part of ${formData.locality}`;
     }
   };
 
