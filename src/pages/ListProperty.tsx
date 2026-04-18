@@ -561,7 +561,7 @@ Don't miss out on this chance to own a premium piece of real estate in ${formDat
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-[var(--text-primary)]">Listing Property</h3>
                   <p className="text-sm text-[var(--text-secondary)] mt-2">Uploading images and securing your connection...</p>
-                  <div className="mt-4 text-2xl font-black text-brand">{uploadProgress}%</div>
+                  <div className="mt-4 text-2xl font-black text-brand">{Math.round(uploadProgress)}%</div>
                 </div>
               </motion.div>
             </div>
