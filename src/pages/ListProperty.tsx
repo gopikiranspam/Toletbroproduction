@@ -278,6 +278,7 @@ Don't miss out on this chance to own a premium piece of real estate in ${formDat
 
   const [error, setError] = useState<string | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const validateForm = () => {
     if (!formData.locality.trim()) return "Property Locality is required";
@@ -310,6 +311,16 @@ Don't miss out on this chance to own a premium piece of real estate in ${formDat
     setLoading(true);
     setUploadProgress(10);
     setError(null);
+    setSubmissionError(null);
+    
+    // Safety timeout for the entire submission process (2 minutes)
+    const timeoutId = setTimeout(() => {
+      if (!isSuccess) {
+        setLoading(false);
+        setSubmissionError("The request is taking longer than expected. Please check your internet connection and try again.");
+      }
+    }, 120000);
+
     try {
       const beds = parseInt(formData.bhkType) || 1;
       const propertyIdToUse = propertyId || `prop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -322,10 +333,15 @@ Don't miss out on this chance to own a premium piece of real estate in ${formDat
       for (let i = 0; i < allImages.length; i++) {
         const item = allImages[i];
         if (item.file) {
-          const url = await api.uploadImage(propertyIdToUse, item.file);
-          finalImageUrls.push(url);
-          uploadedCount++;
-          setUploadProgress(10 + (uploadedCount / Math.max(1, filesToUpload.length)) * 70);
+          try {
+            const url = await api.uploadImage(propertyIdToUse, item.file);
+            finalImageUrls.push(url);
+            uploadedCount++;
+            setUploadProgress(10 + (uploadedCount / Math.max(1, filesToUpload.length)) * 70);
+          } catch (imgErr) {
+            console.error("Image upload failed:", imgErr);
+            throw new Error(`Failed to upload image ${i + 1}. Please try again.`);
+          }
         } else if (item.url) {
           finalImageUrls.push(item.url);
         }
@@ -355,32 +371,38 @@ Don't miss out on this chance to own a premium piece of real estate in ${formDat
       const { db } = await import('../firebase');
       const { doc, setDoc, updateDoc } = await import('firebase/firestore');
       
-      if (isEditMode) {
-        await updateDoc(doc(db, 'properties', propertyIdToUse), finalData as any);
-      } else {
-        await setDoc(doc(db, 'properties', propertyIdToUse), {
-          ...finalData,
-          createdAt: new Date().toISOString(),
-          views: 0,
-          scans: 0,
-          favoritesCount: 0,
-        });
+      try {
+        if (isEditMode) {
+          await updateDoc(doc(db, 'properties', propertyIdToUse), finalData as any);
+        } else {
+          await setDoc(doc(db, 'properties', propertyIdToUse), {
+            ...finalData,
+            createdAt: new Date().toISOString(),
+            views: 0,
+            scans: 0,
+            favoritesCount: 0,
+          });
+        }
+      } catch (dbErr) {
+        console.error("Database write failed:", dbErr);
+        throw new Error("Failed to save property data. Please try again.");
       }
 
+      clearTimeout(timeoutId);
       setUploadProgress(100);
       setIsSuccess(true);
+      setLoading(false);
     } catch (err: any) {
+      clearTimeout(timeoutId);
       console.error("Failed to list property:", err);
-      let message = "Failed to list property. ";
+      let message = "";
       try {
         const parsed = JSON.parse(err.message);
-        message += parsed.error || "";
+        message = parsed.error || err.message;
       } catch {
-        message += err.message || "Please check your connection and try again.";
+        message = err.message || "An unexpected error occurred. Please try again.";
       }
-      setError(message);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } finally {
+      setSubmissionError(message);
       setLoading(false);
     }
   };
@@ -519,50 +541,83 @@ Don't miss out on this chance to own a premium piece of real estate in ${formDat
           </div>
         )}
 
-        {/* Submission Progress Modal */}
+        {/* Submission Progress/Error Modal */}
         <AnimatePresence>
-          {loading && (
+          {(loading || submissionError) && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="relative flex flex-col items-center gap-8 rounded-[3rem] bg-[var(--card-bg)] p-12 shadow-2xl border border-[var(--border)]"
+                className="relative flex flex-col items-center gap-8 rounded-[3rem] bg-[var(--card-bg)] p-8 md:p-12 shadow-2xl border border-[var(--border)] max-w-sm w-full"
               >
-                <div className="relative h-32 w-32">
-                  <svg className="h-full w-full rotate-[-90deg]">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="60"
-                      fill="transparent"
-                      stroke="var(--border)"
-                      strokeWidth="8"
-                      className="opacity-20"
-                    />
-                    <motion.circle
-                      cx="64"
-                      cy="64"
-                      r="60"
-                      fill="transparent"
-                      stroke="var(--color-brand)"
-                      strokeWidth="8"
-                      strokeDasharray="377"
-                      initial={{ strokeDashoffset: 377 }}
-                      animate={{ strokeDashoffset: 377 - (377 * uploadProgress / 100) }}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center text-brand">
-                    <Building2 size={40} />
-                  </div>
-                </div>
+                {!submissionError ? (
+                  <>
+                    <div className="relative h-32 w-32">
+                      <svg className="h-full w-full rotate-[-90deg]">
+                        <circle
+                          cx="64"
+                          cy="64"
+                          r="60"
+                          fill="transparent"
+                          stroke="var(--border)"
+                          strokeWidth="8"
+                          className="opacity-20"
+                        />
+                        <motion.circle
+                          cx="64"
+                          cy="64"
+                          r="60"
+                          fill="transparent"
+                          stroke="var(--color-brand)"
+                          strokeWidth="8"
+                          strokeDasharray="377"
+                          initial={{ strokeDashoffset: 377 }}
+                          animate={{ strokeDashoffset: 377 - (377 * uploadProgress / 100) }}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center text-brand">
+                        <Building2 size={40} className="animate-pulse" />
+                      </div>
+                    </div>
 
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">Listing Property</h3>
-                  <p className="text-sm text-[var(--text-secondary)] mt-2">Uploading images and securing your connection...</p>
-                  <div className="mt-4 text-2xl font-black text-brand">{Math.round(uploadProgress)}%</div>
-                </div>
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-[var(--text-primary)]">Listing Property</h3>
+                      <p className="text-sm text-[var(--text-secondary)] mt-2">Uploading images and securing your connection...</p>
+                      <div className="mt-4 text-2xl font-black text-brand">{Math.round(uploadProgress)}%</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+                      <AlertTriangle size={40} />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-[var(--text-primary)]">Upload Failed</h3>
+                      <p className="text-sm text-[var(--text-secondary)] mt-3 leading-relaxed">
+                        {submissionError}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-3 w-full">
+                      <button 
+                        onClick={() => {
+                          setSubmissionError(null);
+                          handleSubmit();
+                        }}
+                        className="w-full rounded-2xl bg-brand py-4 font-bold text-black shadow-lg shadow-brand/20 transition-transform hover:scale-105 active:scale-95"
+                      >
+                        Try Again
+                      </button>
+                      <button 
+                        onClick={() => setSubmissionError(null)}
+                        className="w-full rounded-2xl border border-[var(--border)] py-4 font-bold text-[var(--text-primary)] transition-transform hover:scale-105 active:scale-95"
+                      >
+                        Edit Details
+                      </button>
+                    </div>
+                  </>
+                )}
               </motion.div>
             </div>
           )}
