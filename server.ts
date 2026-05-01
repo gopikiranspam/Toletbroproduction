@@ -21,48 +21,6 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  // PayU Hash Generation
-  app.post("/api/payu/hash", (req, res) => {
-    const { txnid, amount, productinfo, firstname, email, udf1, udf2, udf3, udf4, udf5 } = req.body;
-    const key = process.env.PAYU_MERCHANT_KEY;
-    const salt = process.env.PAYU_MERCHANT_SALT;
-    const payuEnv = process.env.PAYU_ENV || "test";
-    const payuUrl = payuEnv === "prod" ? "https://secure.payu.in/_payment" : "https://test.payu.in/_payment";
-
-    if (!key || !salt) {
-      return res.status(500).json({ error: "PayU credentials not configured" });
-    }
-
-    // Hash Formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT)
-    const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1 || ""}|${udf2 || ""}|${udf3 || ""}|${udf4 || ""}|${udf5 || ""}||||||${salt}`;
-    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
-
-    res.json({ hash, key, payuUrl });
-  });
-
-  // PayU Response Handler (Success/Failure)
-  app.post("/api/payu/response", (req, res) => {
-    const payuResponse = req.body;
-    const salt = process.env.PAYU_MERCHANT_SALT;
-
-    // Verify Hash
-    // Formula: sha512(SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
-    const { status, udf1, udf2, udf3, udf4, udf5, email, firstname, productinfo, amount, txnid, key, hash: receivedHash } = payuResponse;
-    const hashString = `${salt}|${status}||||||${udf5 || ""}|${udf4 || ""}|${udf3 || ""}|${udf2 || ""}|${udf1 || ""}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
-    const calculatedHash = crypto.createHash("sha512").update(hashString).digest("hex");
-
-    if (calculatedHash !== receivedHash) {
-      // Hash mismatch - potential tampering
-      return res.redirect(`/order-status?status=failed&reason=hash_mismatch&txnid=${txnid}`);
-    }
-
-    if (status === "success") {
-      res.redirect(`/order-status?status=success&txnid=${txnid}&amount=${amount}`);
-    } else {
-      res.redirect(`/order-status?status=failed&txnid=${txnid}&reason=${payuResponse.error_Message || "payment_failed"}`);
-    }
-  });
-
   app.get("/sitemap.xml", (req, res) => {
     const baseUrl = "https://toletbro.com";
     const today = new Date().toISOString().split('T')[0];

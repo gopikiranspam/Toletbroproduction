@@ -181,7 +181,7 @@ export const SlideDetailPage: React.FC = () => {
                   >
                     {slide.buttonText}
                   </button>
-                  <p className="mt-4 text-center text-[10px] font-bold opacity-60 uppercase tracking-wider">Secure Payment via PayU</p>
+                  <p className="mt-4 text-center text-[10px] font-bold opacity-60 uppercase tracking-wider">Secure Encrypted Payment</p>
                 </div>
 
                 <div className="space-y-4 px-2">

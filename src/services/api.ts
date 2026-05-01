@@ -48,28 +48,52 @@ const handleFirestoreError = (error: unknown, operationType: OperationType, path
   throw new Error(stringifiedInfo);
 };
 
-// Test connection to Firestore
-export const testConnection = async () => {
-  try {
-    console.log("Attempting to reach Firestore...");
-    console.log("Firestore Config Check:", {
-      projectId: (db as any)._databaseId?.projectId || 'Unknown',
-      databaseId: (db as any)._databaseId?.database || 'Unknown',
-    });
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log("Firestore reachability test passed.");
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Firestore connection test failed:", errorMessage);
-    
-    if(errorMessage.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. The SDK reports the client is offline.");
-      console.error("This often happens if the API Key is restricted or Identity Toolkit API is disabled.");
-      throw new Error('offline');
+// Test connection to Firestore with retries
+export const testConnection = async (maxRetries = 3) => {
+  let lastError: any = null;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      console.log(`Attempting to reach Firestore (Attempt ${i + 1}/${maxRetries})...`);
+      console.log("Auth State:", auth.currentUser ? `Logged in as ${auth.currentUser.uid}` : "Not logged in");
+      
+      // We use a small timeout for each individual attempt
+      const docRef = doc(db, 'test', 'connection');
+      await getDocFromServer(docRef);
+      console.log("Firestore reachability test passed.");
+      return true;
+    } catch (error: any) {
+      lastError = error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = error.code || 'unknown';
+      console.warn(`Firestore attempt ${i + 1} failed:`, { code: errorCode, message: errorMessage });
+      
+      // If it's a permission error, it's actually "connected" but forbidden
+      if (errorCode === 'permission-denied' || errorMessage.includes('permission')) {
+        console.log("Firestore reached, but permission was denied (this is expected if the document doesn't exist).");
+        return true; 
+      }
+
+      // Wait a bit before retry
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
-    // Re-throw other errors
-    throw error;
   }
+
+  // If we reach here, all retries failed
+  const finalMessage = lastError instanceof Error ? lastError.message : String(lastError);
+  console.error("Firestore connection totally failed after retries:", finalMessage);
+  
+  if (finalMessage.includes('offline')) {
+    console.error("CRITICAL: Firebase SDK reports offline. CHECKLIST:");
+    console.error("1. Is Identity Toolkit API enabled?");
+    console.error("2. Are API Key restrictions too strict?");
+    console.error("3. Is the project ID in firebase-applet-config.json correct?");
+    throw new Error('offline');
+  }
+  
+  throw lastError;
 };
 
 export const api = {

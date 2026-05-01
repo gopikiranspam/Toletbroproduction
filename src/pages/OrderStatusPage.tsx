@@ -68,9 +68,7 @@ export const OrderStatusPage: React.FC = () => {
               </div>
               <h1 className="text-3xl font-bold text-[var(--text-primary)]">Payment Failed</h1>
               <p className="text-[var(--text-secondary)]">
-                {reason === 'hash_mismatch' 
-                  ? 'Security verification failed. Please try again.' 
-                  : 'We couldn\'t process your payment. Please try again or use a different payment method.'}
+                We couldn't process your payment. Please try again or use a different payment method.
               </p>
               
               {txnid && (

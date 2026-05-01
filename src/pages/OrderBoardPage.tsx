@@ -32,62 +32,12 @@ export const OrderBoardPage: React.FC = () => {
     setError(null);
 
     try {
-      const txnid = `TB${Date.now()}${Math.floor(Math.random() * 1000)}`;
-      const amount = "499.00";
-      const productinfo = "Smart Tolet Board";
-      const firstname = user.name || "Customer";
-      const email = user.email || "";
-      const phone = user.phone || "";
-
-      // 1. Get Hash from Backend
-      const response = await fetch('/api/payu/hash', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          txnid,
-          amount,
-          productinfo,
-          firstname,
-          email,
-          udf1: user.id // Store userId in udf1
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to generate payment hash');
-      const { hash, key, payuUrl } = await response.json();
-
-      // 2. Create and Submit PayU Form
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = payuUrl;
-
-      const fields: Record<string, string> = {
-        key,
-        txnid,
-        amount,
-        productinfo,
-        firstname,
-        email,
-        phone,
-        hash,
-        surl: `${window.location.origin}/api/payu/response`,
-        furl: `${window.location.origin}/api/payu/response`,
-        udf1: user.id,
-        service_provider: "payu_paisa"
-      };
-
-      Object.entries(fields).forEach(([name, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-      });
-
-      document.body.appendChild(form);
-      form.submit();
+      // Simulate a small delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      alert("Payment gateway is temporarily under maintenance. Please try again later or contact support.");
+      setLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      setError('Something went wrong. Please try again.');
       setLoading(false);
     }
   };
@@ -184,7 +134,7 @@ export const OrderBoardPage: React.FC = () => {
                   )}
                 </button>
                 <p className="mt-4 text-center text-[10px] text-[var(--text-secondary)]">
-                  Secure checkout powered by PayU
+                  Secure checkout with industry-standard encryption
                 </p>
               </div>
             </div>

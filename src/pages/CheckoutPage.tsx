@@ -33,10 +33,10 @@ export const CheckoutPage: React.FC = () => {
 
   const handlePayment = () => {
     setIsProcessing(true);
-    // Simulate payment gateway redirection
+    // Simulate payment process
     setTimeout(() => {
       setIsProcessing(false);
-      alert("This is a UI/UX demo. In production, you would be redirected to PayU payment gateway.");
+      alert("Payment gateway is temporarily under maintenance. Please try again later.");
     }, 2000);
   };
 
@@ -114,7 +114,7 @@ export const CheckoutPage: React.FC = () => {
                   <div className="mt-6 rounded-2xl bg-[var(--bg)] p-6 border border-[var(--border)]">
                     <div className="flex items-center gap-3 text-[var(--text-secondary)]">
                       <ShieldCheck size={20} className="text-emerald-500" />
-                      <p className="text-xs font-medium">Your payment is secured by <span className="font-bold text-[var(--text-primary)]">PayU</span>. We use industry-standard encryption.</p>
+                      <p className="text-xs font-medium">Your payment is secured with 128-bit SSL encryption. We never store your full card details.</p>
                     </div>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export const CheckoutPage: React.FC = () => {
                   <Loader2 size={20} className="animate-spin" />
                 ) : (
                   <>
-                    Pay Now with PayU
+                    Pay Now Securely
                     <CreditCard size={18} />
                   </>
                 )}

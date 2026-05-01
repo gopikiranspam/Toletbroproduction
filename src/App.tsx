@@ -333,11 +333,19 @@ const HomePage = () => {
       
       {connectionError && (
         <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-3">
-          <div className="mx-auto max-w-7xl flex items-center gap-3 text-red-500">
-            <AlertCircle size={18} />
-            <p className="text-sm font-medium">
-              Could not connect to the database. Please ensure Firebase is correctly set up.
-            </p>
+          <div className="mx-auto max-w-7xl flex items-center justify-between gap-3 text-red-500">
+            <div className="flex items-center gap-3">
+              <AlertCircle size={18} />
+              <p className="text-sm font-medium">
+                Could not connect to the database. The client reports as offline.
+              </p>
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="rounded-lg bg-red-500 px-4 py-1.5 text-xs font-bold text-white transition-all hover:bg-red-600 active:scale-95"
+            >
+              Retry
+            </button>
           </div>
         </div>
       )}
@@ -702,9 +710,6 @@ const AppLayout = () => {
           />
         )}
       </AnimatePresence>
-
-      {/* Global hidden reCAPTCHA container */}
-      <div id="recaptcha-container" className="recaptcha-container"></div>
     </div>
   );
 };
